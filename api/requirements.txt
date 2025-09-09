@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+pandas
+numpy
+scikit-learn
+scipy
+joblib
+tensorflow
+aiofiles
+python-multipart
+pydantic
+python-jose[cryptography]
+passlib[bcrypt]
+matplotlib
+seaborn

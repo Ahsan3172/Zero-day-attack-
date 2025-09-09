@@ -1,2 +1,19 @@
-{"level":"info","message":"MySQL connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-06 10:22:35"}
-{"level":"info","message":"Database connection closed","service":"zero-day-attack-api","timestamp":"2025-09-06 10:22:35"}
+{"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-09 07:58:58"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"zero-day-attack-api","timestamp":"2025-09-09 07:59:31"}
+{"level":"info","message":"MySQL connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-09 07:59:33"}
+{"level":"info","message":"Database connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-09 07:59:33"}
+{"level":"info","message":"Server running on port 5000 in development mode","service":"zero-day-attack-api","timestamp":"2025-09-09 07:59:33"}
+{"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-09 07:59:52"}
+{"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-09 08:00:00"}
+{"level":"info","message":"SIGINT received, shutting down gracefully","service":"zero-day-attack-api","timestamp":"2025-09-09 08:06:08"}
+{"level":"info","message":"MySQL connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-09 08:06:10"}
+{"level":"info","message":"Database connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-09 08:06:10"}
+{"level":"info","message":"Server running on port 5000 in development mode","service":"zero-day-attack-api","timestamp":"2025-09-09 08:06:10"}
+{"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-09 08:06:28"}
+{"level":"info","message":"MySQL connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-09 08:54:40"}
+{"level":"info","message":"Database connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-09 08:54:40"}
+{"level":"info","message":"Server running on port 5000 in development mode","service":"zero-day-attack-api","timestamp":"2025-09-09 08:54:40"}
+{"level":"info","message":"MySQL connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-09 08:54:59"}
+{"level":"info","message":"Database connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-09 08:54:59"}
+{"level":"info","message":"Server running on port 5000 in development mode","service":"zero-day-attack-api","timestamp":"2025-09-09 08:54:59"}
+{"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-09 09:04:32"}

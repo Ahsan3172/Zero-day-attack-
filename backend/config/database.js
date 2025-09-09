@@ -12,10 +12,11 @@ const dbConfig = {
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
-  acquireTimeout: 60000,
-  timeout: 60000,
   enableKeepAlive: true,
-  keepAliveInitialDelay: 0
+  keepAliveInitialDelay: 0,
+  // Remove invalid options that cause warnings
+  multipleStatements: false,
+  timezone: '+00:00'
 };
 
 const connectDB = async () => {

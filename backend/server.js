@@ -12,6 +12,8 @@ dotenv.config();
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const modelRoutes = require('./routes/models');
+const mlModelRoutes = require('./routes/ml-models');
+const predictionsRoutes = require('./routes/predictions');
 const datasetRoutes = require('./routes/datasets');
 const dashboardRoutes = require('./routes/dashboard');
 const adminRoutes = require('./routes/admin');
@@ -67,6 +69,8 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', authenticateToken, userRoutes);
 app.use('/api/models', authenticateToken, modelRoutes);
+app.use('/api/ml-models', mlModelRoutes);
+app.use('/api/predictions', predictionsRoutes);
 app.use('/api/datasets', authenticateToken, datasetRoutes);
 app.use('/api/dashboard', authenticateToken, dashboardRoutes);
 app.use('/api/admin', authenticateToken, adminRoutes);

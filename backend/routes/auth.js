@@ -11,8 +11,13 @@ const router = express.Router();
 // Rate limiting for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit each IP to 5 requests per windowMs
-  message: 'Too many authentication attempts, please try again later.'
+  max: 20, // More generous limit for development
+  message: {
+    success: false,
+    message: 'Too many authentication attempts, please try again later.'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
 });
 
 // Generate JWT token
@@ -171,7 +176,8 @@ router.post('/login', authLimiter, [
           id: user.id,
           username: user.username,
           email: user.email,
-          role: user.role
+          role: user.role,
+          status: user.status
         },
         token
       }

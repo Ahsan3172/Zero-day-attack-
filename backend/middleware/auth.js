@@ -80,8 +80,22 @@ const requireUser = (req, res, next) => {
   next();
 };
 
+// Middleware to check if user has specific roles
+const requireRole = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Access denied. Required roles: ${allowedRoles.join(', ')}`
+      });
+    }
+    next();
+  };
+};
+
 module.exports = {
   authenticateToken,
   requireAdmin,
-  requireUser
+  requireUser,
+  requireRole
 };
