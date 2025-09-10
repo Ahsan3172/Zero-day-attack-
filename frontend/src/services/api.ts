@@ -343,6 +343,15 @@ export const adminApi = {
     return apiClient.delete(`/admin/users/${userId}`);
   },
 
+  inviteUser: async (userData: {
+    username: string;
+    email: string;
+    password: string;
+    role?: 'admin' | 'user';
+  }): Promise<ApiResponse<User>> => {
+    return apiClient.post('/admin/users/invite', userData);
+  },
+
   trainModel: async (modelData: {
     name: string;
     description: string;

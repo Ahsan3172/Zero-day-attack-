@@ -461,4 +461,80 @@ router.get('/logs', requireAdmin, async (req, res) => {
   }
 });
 
+// @route   POST /api/admin/users/invite
+// @desc    Create/invite a new user
+// @access  Private (Admin only)
+router.post('/users/invite', requireAdmin, async (req, res) => {
+  try {
+    const { username, email, password, role = 'user' } = req.body;
+    const adminId = req.user.id;
+
+    // Validate required fields
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: 'Username, email, and password are required'
+      });
+    }
+
+    // Check if user already exists
+    const existingUser = await executeQuery(
+      'SELECT id FROM users WHERE email = ? OR username = ?',
+      [email, username]
+    );
+
+    if (existingUser.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'User with this email or username already exists'
+      });
+    }
+
+    // Hash password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+
+    // Create user with approved status since admin is creating it
+    const result = await executeQuery(`
+      INSERT INTO users (username, email, password, role, status, approved_by, approved_at, created_at)
+      VALUES (?, ?, ?, ?, 'approved', ?, NOW(), NOW())
+    `, [username, email, hashedPassword, role, adminId]);
+
+    const userId = result.insertId;
+
+    // Log the action
+    await executeQuery(`
+      INSERT INTO audit_logs (user_id, action, table_name, record_id, new_values) 
+      VALUES (?, ?, ?, ?, ?)
+    `, [
+      adminId, 
+      'create_user', 
+      'users', 
+      userId, 
+      JSON.stringify({ username, email, role, status: 'approved', created_by: adminId })
+    ]);
+
+    logger.info(`Admin ${req.user.username} created new user ${username}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      data: {
+        id: userId,
+        username,
+        email,
+        role,
+        status: 'approved'
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error creating user:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to create user'
+    });
+  }
+});
+
 module.exports = router;

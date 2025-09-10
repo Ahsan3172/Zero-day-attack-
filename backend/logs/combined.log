@@ -28,3 +28,12 @@
 {"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 06:09:38"}
 {"level":"info","message":"New user registered: adnanhaseeb8881@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 06:10:49"}
 {"level":"info","message":"User logged in: adnanhaseeb8881@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 06:11:48"}
+{"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 06:15:03"}
+{"level":"info","message":"MySQL connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-10 06:23:04"}
+{"level":"info","message":"Database connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-10 06:23:04"}
+{"level":"info","message":"Server running on port 5000 in development mode","service":"zero-day-attack-api","timestamp":"2025-09-10 06:23:04"}
+{"level":"info","message":"New user registered: admin123@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 07:05:35"}
+{"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 07:05:56"}
+{"level":"info","message":"Admin Zubair approved user zubair1","service":"zero-day-attack-api","timestamp":"2025-09-10 07:06:02"}
+{"level":"info","message":"User logged in: admin123@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 07:06:35"}
+{"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 07:07:04"}
