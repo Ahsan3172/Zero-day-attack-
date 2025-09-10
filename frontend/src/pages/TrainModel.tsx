@@ -1,6 +1,15 @@
 import ModelTraining from "@/components/dashboard/ModelTraining";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const TrainModel = () => {
+  const { user } = useAuth();
+
+  // Double-check admin role at component level
+  if (user?.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div>

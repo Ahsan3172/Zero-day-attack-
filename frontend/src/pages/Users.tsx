@@ -5,10 +5,18 @@ import { Input } from "@/components/ui/input";
 import { Users as UsersIcon, Search, UserPlus, Shield, User, Clock } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
 
 const Users = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Double-check admin role at component level
+  if (user?.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const users = [
     {

@@ -20,3 +20,11 @@
 {"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-09 09:28:46"}
 {"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-09 09:55:14"}
 {"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-09 09:55:33"}
+{"code":"ECONNREFUSED","fatal":true,"level":"error","message":"Database connection failed:","service":"zero-day-attack-api","stack":"AggregateError [ECONNREFUSED]: \n    at internalConnectMultiple (node:net:1134:18)\n    at afterConnectMultiple (node:net:1715:7)","timestamp":"2025-09-10 06:05:13"}
+{"level":"info","message":"MySQL connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-10 06:06:08"}
+{"level":"info","message":"Database connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-10 06:06:08"}
+{"level":"info","message":"Server running on port 5000 in development mode","service":"zero-day-attack-api","timestamp":"2025-09-10 06:06:09"}
+{"level":"info","message":"New user registered: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 06:08:33"}
+{"level":"info","message":"User logged in: adnanhaseeb013@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 06:09:38"}
+{"level":"info","message":"New user registered: adnanhaseeb8881@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 06:10:49"}
+{"level":"info","message":"User logged in: adnanhaseeb8881@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-10 06:11:48"}

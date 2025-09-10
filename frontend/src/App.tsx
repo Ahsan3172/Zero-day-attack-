@@ -75,7 +75,7 @@ const App = () => (
             } />
             
             <Route path="/train-model" element={
-              <ProtectedRoute>
+              <ProtectedRoute requiredRole="admin">
                 <DashboardLayout>
                   <TrainModel />
                 </DashboardLayout>

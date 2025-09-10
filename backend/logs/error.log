@@ -1,0 +1,1 @@
+{"code":"ECONNREFUSED","fatal":true,"level":"error","message":"Database connection failed:","service":"zero-day-attack-api","stack":"AggregateError [ECONNREFUSED]: \n    at internalConnectMultiple (node:net:1134:18)\n    at afterConnectMultiple (node:net:1715:7)","timestamp":"2025-09-10 06:05:13"}

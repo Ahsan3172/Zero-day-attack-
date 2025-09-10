@@ -3,9 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Brain, Clock, CheckCircle, AlertCircle, Play, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Models = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+
+  // Check if user has admin role
+  const isAdmin = user?.role === 'admin';
 
   const models = [
     {
@@ -76,6 +81,15 @@ const Models = () => {
   };
 
   const handleDeleteModel = (modelName: string) => {
+    if (!isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "Only administrators can delete models",
+        variant: "destructive",
+      });
+      return;
+    }
+
     toast({
       title: "Model deleted",
       description: `${modelName} has been removed from the system`,
@@ -87,10 +101,20 @@ const Models = () => {
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Models</h1>
-          <p className="text-muted-foreground">Manage and monitor your machine learning models</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground flex items-center gap-2">
+            Models
+            {isAdmin && (
+              <Badge variant="secondary" className="text-xs">
+                Admin Features Available
+              </Badge>
+            )}
+          </h1>
+          <p className="text-muted-foreground">
+            Manage and monitor your machine learning models
+            {!isAdmin && " • Contact admin to delete models"}
+          </p>
         </div>
-        <Button>
+        <Button disabled={!isAdmin}>
           <Brain className="h-4 w-4 mr-2" />
           Deploy New Model
         </Button>
@@ -141,14 +165,16 @@ const Models = () => {
                     Activate
                   </Button>
                 )}
-                <Button 
-                  size="sm" 
-                  variant="destructive"
-                  onClick={() => handleDeleteModel(model.name)}
-                >
-                  <Trash2 className="h-4 w-4 mr-1" />
-                  Delete
-                </Button>
+                {isAdmin && (
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    onClick={() => handleDeleteModel(model.name)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                )}
               </div>
             </CardContent>
           </Card>

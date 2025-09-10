@@ -25,12 +25,19 @@ import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/contexts/AuthContext";
 
-const menuItems = [
+interface MenuItem {
+  title: string;
+  url: string;
+  icon: any;
+  requiredRole?: 'admin' | 'user';
+}
+
+const menuItems: MenuItem[] = [
   { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard },
   { title: "Test Models", url: "/test-models", icon: TestTube },
   { title: "Models", url: "/models", icon: Brain },
-  { title: "Train Model", url: "/train-model", icon: Settings },
-  { title: "Users", url: "/users", icon: Users },
+  { title: "Train Model", url: "/train-model", icon: Settings, requiredRole: "admin" },
+  { title: "Users", url: "/users", icon: Users, requiredRole: "admin" },
   { title: "Reports", url: "/reports", icon: FileText },
 ];
 
@@ -39,7 +46,7 @@ export function AppSidebar() {
   const location = useLocation();
   const currentPath = location.pathname;
   const isMobile = useIsMobile();
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
 
   const isActive = (path: string) => currentPath === path;
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
@@ -59,6 +66,20 @@ export function AppSidebar() {
     }
   };
 
+  // Filter menu items based on user role
+  const filteredMenuItems = menuItems.filter(item => {
+    // Show all items if no role requirement
+    if (!item.requiredRole) return true;
+    
+    // Show admin-only items only to admin users
+    if (item.requiredRole === 'admin') {
+      return user?.role === 'admin';
+    }
+    
+    // Show user-only items to all authenticated users
+    return true;
+  });
+
   return (
     <Sidebar className={state === "collapsed" ? "w-16" : "w-64"} collapsible="icon">
       <SidebarHeader className="p-6">
@@ -76,7 +97,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {filteredMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink to={item.url} className={getNavCls} onClick={handleNavClick}>
