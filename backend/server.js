@@ -32,17 +32,13 @@ const logger = setupLogging();
 // Security middleware
 app.use(helmet());
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW) * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS), // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.'
-});
-app.use(limiter);
-
-// CORS configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : ['http://localhost:3000'],
+  origin: process.env.CORS_ORIGINS ? process.env.CORS_ORIGINS.split(',') : [
+    'http://localhost:3000', 
+    'http://localhost:8080',
+    'http://localhost:8081',
+    'http://localhost:5173'
+  ],
   credentials: true,
   optionsSuccessStatus: 200
 };

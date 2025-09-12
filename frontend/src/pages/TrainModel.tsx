@@ -1,4 +1,5 @@
 import ModelTraining from "@/components/dashboard/ModelTraining";
+import { TrainingHistory } from "@/components/dashboard/TrainingHistory";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 
@@ -17,6 +18,7 @@ const TrainModel = () => {
         <p className="text-muted-foreground">Configure and train new machine learning models for threat detection</p>
       </div>
       <ModelTraining />
+      <TrainingHistory />
     </div>
   );
 };

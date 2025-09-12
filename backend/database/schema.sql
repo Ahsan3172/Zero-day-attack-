@@ -84,6 +84,27 @@ CREATE TABLE user_sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
+-- Model training jobs
+CREATE TABLE training_jobs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    task_id VARCHAR(100) UNIQUE NOT NULL,
+    user_id INT NOT NULL,
+    dataset_path VARCHAR(255),
+    model_types JSON NOT NULL, -- Array of model types to train
+    test_size DECIMAL(3,2) DEFAULT 0.2,
+    random_state INT DEFAULT 42,
+    status ENUM('started', 'in_progress', 'completed', 'failed', 'cancelled') DEFAULT 'started',
+    progress DECIMAL(5,2) DEFAULT 0.00, -- Progress percentage
+    current_model VARCHAR(50),
+    message TEXT,
+    error_details TEXT,
+    models_completed JSON, -- Array of completed models
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    completed_at TIMESTAMP NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
 -- Model training logs
 CREATE TABLE training_logs (
     id INT PRIMARY KEY AUTO_INCREMENT,

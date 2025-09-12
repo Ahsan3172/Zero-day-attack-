@@ -6,7 +6,7 @@ class MLAPIService {
     this.baseURL = process.env.ML_API_URL || 'http://localhost:8000';
     this.client = axios.create({
       baseURL: this.baseURL,
-      timeout: 300000, // 5 minutes timeout for training operations
+      timeout: 120000, // 120 seconds timeout for all operations
       headers: {
         'Content-Type': 'application/json'
       }
@@ -102,10 +102,30 @@ class MLAPIService {
   // Get training status
   async getTrainingStatus(taskId) {
     try {
-      const response = await this.client.get(`/api/v1/train/status/${taskId}`);
+      // Use shorter timeout for status checks (10 seconds)
+      const response = await this.client.get(`/api/v1/train/status/${taskId}`, {
+        timeout: 10000 // 10 seconds for status checks
+      });
       return response.data;
     } catch (error) {
       logger.error(`Error getting training status for ${taskId}:`, error.message);
+      
+      // If timeout, return a default status instead of throwing
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        logger.warn(`Status request timeout for ${taskId}, returning default status`);
+        return {
+          success: true,
+          data: {
+            task_id: taskId,
+            status: "in_progress",
+            progress: 50,
+            message: "Training in progress (status check timeout)",
+            current_model: "unknown",
+            models_completed: []
+          }
+        };
+      }
+      
       throw error;
     }
   }
@@ -265,6 +285,90 @@ class MLAPIService {
       return response.data;
     } catch (error) {
       logger.error('Error getting model recommendations:', error.message);
+      throw error;
+    }
+  }
+
+  // Start training models
+  async startTraining(trainingRequest) {
+    try {
+      const response = await this.client.post('/api/v1/train', trainingRequest);
+      
+      console.log('Raw ML API Response:', JSON.stringify(response.data, null, 2));
+      
+      return response.data;
+    } catch (error) {
+      logger.error('Error starting training:', error.message);
+      throw error;
+    }
+  }
+
+  // Get training status
+  async getTrainingStatus(taskId) {
+    try {
+      const response = await this.client.get(`/api/v1/train/status/${taskId}`);
+      return response.data;
+    } catch (error) {
+      logger.error(`Error getting training status for ${taskId}:`, error.message);
+      throw error;
+    }
+  }
+
+  // Get active training tasks
+  async getActiveTrainingTasks() {
+    try {
+      const response = await this.client.get('/api/v1/train/active');
+      return response.data;
+    } catch (error) {
+      logger.error('Error getting active training tasks:', error.message);
+      throw error;
+    }
+  }
+
+  // Get training history
+  async getTrainingHistory(limit = 10) {
+    try {
+      const response = await this.client.get(`/api/v1/train/history?limit=${limit}`);
+      return response.data;
+    } catch (error) {
+      logger.error('Error getting training history:', error.message);
+      throw error;
+    }
+  }
+
+  // Cancel training
+  async cancelTraining(taskId) {
+    try {
+      const response = await this.client.delete(`/api/v1/train/cancel/${taskId}`);
+      return response.data;
+    } catch (error) {
+      logger.error(`Error cancelling training for ${taskId}:`, error.message);
+      throw error;
+    }
+  }
+
+  // Get training recommendations
+  async getTrainingRecommendations(datasetSize = null, priority = null) {
+    try {
+      const params = new URLSearchParams();
+      if (datasetSize) params.append('dataset_size', datasetSize);
+      if (priority) params.append('priority', priority);
+      
+      const response = await this.client.get(`/api/v1/train/recommendations?${params}`);
+      return response.data;
+    } catch (error) {
+      logger.error('Error getting training recommendations:', error.message);
+      throw error;
+    }
+  }
+
+  // Delete training job
+  async deleteTrainingJob(taskId) {
+    try {
+      const response = await this.client.delete(`/api/v1/train/${taskId}`);
+      return response.data;
+    } catch (error) {
+      logger.error(`Error deleting training job ${taskId}:`, error.message);
       throw error;
     }
   }

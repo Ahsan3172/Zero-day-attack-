@@ -233,3 +233,244 @@
 2025-09-09 08:45:23,878 - watchfiles.main - INFO - 1 change detected
 2025-09-09 08:45:24,281 - watchfiles.main - INFO - 1 change detected
 2025-09-09 08:45:24,736 - watchfiles.main - INFO - 1 change detected
+2025-09-11 08:12:34,517 - routes.training - INFO - Starting background training for task training_20250911_081234
+2025-09-11 08:12:34,518 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 08:12:35,632 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 08:12:43,489 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 08:12:44,116 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 08:12:44,195 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 08:12:44,291 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 08:12:45,319 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 08:12:45,340 - routes.training - INFO - Training random_forest model for task training_20250911_081234
+2025-09-11 08:12:45,341 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 08:19:33,918 - routes.training - INFO - Starting background training for task training_20250911_081933
+2025-09-11 08:19:33,918 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 08:19:35,063 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 08:19:43,314 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 08:19:43,927 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 08:19:44,007 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 08:19:44,113 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 08:19:45,228 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 08:19:45,259 - routes.training - INFO - Training random_forest model for task training_20250911_081933
+2025-09-11 08:19:45,259 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 08:22:05,348 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 08:22:05,348 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 08:22:05,362 - routes.training - INFO - Completed training random_forest for task training_20250911_081933
+2025-09-11 08:22:05,362 - routes.training - INFO - Training task training_20250911_081933 completed successfully
+2025-09-11 08:23:05,000 - routes.training - INFO - Starting background training for task training_20250911_082305
+2025-09-11 08:23:05,000 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 08:23:06,092 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 08:23:14,308 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 08:23:14,908 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 08:23:14,987 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 08:23:15,087 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 08:23:16,155 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 08:23:16,177 - routes.training - INFO - Training random_forest model for task training_20250911_082305
+2025-09-11 08:23:16,177 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 08:25:37,722 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 08:25:37,722 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 08:25:37,879 - routes.training - INFO - Completed training random_forest for task training_20250911_082305
+2025-09-11 08:25:37,879 - routes.training - INFO - Training task training_20250911_082305 completed successfully
+2025-09-11 08:25:37,920 - routes.training - INFO - Starting background training for task training_20250911_082537
+2025-09-11 08:25:37,920 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 08:25:39,053 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 08:25:47,937 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 08:25:48,542 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 08:25:48,618 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 08:25:48,719 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 08:25:49,835 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 08:25:49,868 - routes.training - INFO - Training random_forest model for task training_20250911_082537
+2025-09-11 08:25:49,868 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 08:28:15,586 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 08:28:15,586 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 08:28:15,615 - routes.training - INFO - Completed training random_forest for task training_20250911_082537
+2025-09-11 08:28:15,615 - routes.training - INFO - Training task training_20250911_082537 completed successfully
+2025-09-11 08:28:15,684 - routes.training - INFO - Starting background training for task training_20250911_082815
+2025-09-11 08:28:15,688 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 08:28:16,742 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 08:28:26,323 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 08:28:26,961 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 08:28:27,043 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 08:28:27,150 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 08:28:28,247 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 08:28:28,271 - routes.training - INFO - Training random_forest model for task training_20250911_082815
+2025-09-11 08:28:28,277 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 08:30:59,460 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 08:30:59,460 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 08:30:59,611 - routes.training - INFO - Completed training random_forest for task training_20250911_082815
+2025-09-11 08:30:59,611 - routes.training - INFO - Training task training_20250911_082815 completed successfully
+2025-09-11 08:30:59,641 - routes.training - INFO - Starting background training for task training_20250911_083059
+2025-09-11 08:30:59,641 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 08:31:00,516 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 08:31:09,524 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 08:31:10,126 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 08:31:10,205 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 08:31:10,307 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 08:31:11,567 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 08:31:11,611 - routes.training - INFO - Training random_forest model for task training_20250911_083059
+2025-09-11 08:31:11,611 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 08:33:50,304 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 08:33:50,305 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 08:33:50,320 - routes.training - INFO - Completed training random_forest for task training_20250911_083059
+2025-09-11 08:33:50,321 - routes.training - INFO - Training task training_20250911_083059 completed successfully
+2025-09-11 08:33:50,354 - routes.training - INFO - Starting background training for task training_20250911_083350
+2025-09-11 08:33:50,354 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 08:33:51,598 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 08:34:01,452 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 08:34:02,081 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 08:34:02,165 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 08:34:02,262 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 08:34:03,333 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 08:34:03,360 - routes.training - INFO - Training random_forest model for task training_20250911_083350
+2025-09-11 08:34:03,361 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:02:17,341 - routes.training - INFO - Starting background training for task training_20250911_090217
+2025-09-11 09:02:17,341 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:02:18,426 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:02:26,588 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:02:27,152 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:02:27,215 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:02:27,298 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:02:28,275 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:02:28,300 - routes.training - INFO - Training random_forest model for task training_20250911_090217
+2025-09-11 09:02:28,300 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:07:37,705 - routes.training - INFO - Starting background training for task training_20250911_090737
+2025-09-11 09:07:37,706 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:07:39,482 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:07:47,989 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:07:48,591 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:07:48,662 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:07:48,766 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:07:49,840 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:07:49,856 - routes.training - INFO - Training random_forest model for task training_20250911_090737
+2025-09-11 09:07:49,856 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:10:16,810 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 09:10:16,810 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 09:10:16,819 - routes.training - INFO - Completed training random_forest for task training_20250911_090737
+2025-09-11 09:10:16,819 - routes.training - INFO - Training task training_20250911_090737 completed successfully
+2025-09-11 09:14:26,215 - routes.training - INFO - Starting background training for task training_20250911_091426
+2025-09-11 09:14:26,215 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:14:27,621 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:14:38,514 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:14:39,250 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:14:39,355 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:14:39,467 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:14:41,063 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:14:41,075 - routes.training - INFO - Training random_forest model for task training_20250911_091426
+2025-09-11 09:14:41,075 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:16:47,794 - routes.training - INFO - Starting background training for task training_20250911_091647
+2025-09-11 09:16:47,809 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:16:49,106 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:16:59,825 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:17:00,584 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:17:00,683 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:17:00,792 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:17:02,126 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:17:02,155 - routes.training - INFO - Training random_forest model for task training_20250911_091647
+2025-09-11 09:17:02,155 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:19:11,059 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 09:19:11,059 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 09:19:11,063 - routes.training - INFO - Completed training random_forest for task training_20250911_091647
+2025-09-11 09:19:11,068 - routes.training - INFO - Training task training_20250911_091647 completed successfully
+2025-09-11 09:23:41,952 - routes.training - INFO - Starting background training for task training_20250911_092341
+2025-09-11 09:23:41,957 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:23:43,246 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:23:53,952 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:23:54,718 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:23:54,808 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:23:54,920 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:23:56,302 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:23:56,328 - routes.training - INFO - Training random_forest model for task training_20250911_092341
+2025-09-11 09:23:56,329 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:29:03,769 - routes.training - INFO - Starting background training for task training_20250911_092903
+2025-09-11 09:29:03,769 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:29:05,062 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:29:15,918 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:29:16,640 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:29:16,733 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:29:16,849 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:29:18,230 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:29:18,270 - routes.training - INFO - Training random_forest model for task training_20250911_092903
+2025-09-11 09:29:18,270 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:31:39,965 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 09:31:39,965 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 09:31:39,988 - routes.training - INFO - Completed training random_forest for task training_20250911_092903
+2025-09-11 09:31:39,989 - routes.training - INFO - Training task training_20250911_092903 completed successfully
+2025-09-11 09:39:17,060 - routes.training - INFO - Starting background training for task training_20250911_093917
+2025-09-11 09:39:17,060 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:39:18,435 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:39:29,231 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:39:29,950 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:39:30,043 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:39:30,155 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:39:31,594 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:39:31,621 - routes.training - INFO - Training random_forest model for task training_20250911_093917
+2025-09-11 09:39:31,621 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:41:49,670 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 09:41:49,671 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 09:41:49,683 - routes.training - INFO - Completed training random_forest for task training_20250911_093917
+2025-09-11 09:41:49,683 - routes.training - INFO - Training task training_20250911_093917 completed successfully
+2025-09-11 09:48:15,045 - routes.training - INFO - Starting background training for task training_20250911_094815
+2025-09-11 09:48:15,046 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:48:16,028 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:48:24,278 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:48:24,879 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:48:24,951 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:48:25,044 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:48:26,211 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:48:26,244 - routes.training - INFO - Training random_forest model for task training_20250911_094815
+2025-09-11 09:48:26,244 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:50:47,036 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 09:50:47,036 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 09:50:47,051 - routes.training - INFO - Completed training random_forest for task training_20250911_094815
+2025-09-11 09:50:47,051 - routes.training - INFO - Training task training_20250911_094815 completed successfully
+2025-09-11 09:50:47,092 - routes.training - INFO - Starting background training for task training_20250911_095047
+2025-09-11 09:50:47,093 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:50:49,262 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:50:58,089 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:50:58,685 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:50:58,774 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:50:58,878 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:50:59,986 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:51:00,014 - routes.training - INFO - Training random_forest model for task training_20250911_095047
+2025-09-11 09:51:00,014 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:55:12,175 - routes.training - INFO - Starting background training thread for task training_20250911_095512
+2025-09-11 09:55:12,175 - routes.training - INFO - Started training thread for task training_20250911_095512
+2025-09-11 09:55:12,175 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-11 09:55:13,464 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-11 09:55:24,700 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-11 09:55:25,431 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-11 09:55:25,577 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-11 09:55:25,700 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-11 09:55:27,086 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-11 09:55:27,112 - routes.training - INFO - Training random_forest model for task training_20250911_095512
+2025-09-11 09:55:27,113 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-11 09:58:00,688 - models.ml_pipeline - INFO - Model random_forest saved successfully
+2025-09-11 09:58:00,690 - models.model_trainer - INFO - Random Forest trained successfully with accuracy: 0.9518
+2025-09-11 09:58:00,710 - routes.training - INFO - Completed training random_forest for task training_20250911_095512
+2025-09-11 09:58:00,711 - routes.training - INFO - Training task training_20250911_095512 completed successfully
+2025-09-12 06:04:13,199 - routes.training - INFO - Starting background training thread for task training_20250912_060413
+2025-09-12 06:04:13,199 - routes.training - INFO - Started training thread for task training_20250912_060413
+2025-09-12 06:04:13,203 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-12 06:04:16,006 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-12 06:04:39,122 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-12 06:04:40,297 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-12 06:04:40,458 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-12 06:04:40,614 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-12 06:04:42,692 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-12 06:04:42,733 - routes.training - INFO - Training random_forest model for task training_20250912_060413
+2025-09-12 06:04:42,733 - models.model_trainer - INFO - Training Random Forest model...
+2025-09-12 06:41:26,295 - routes.training - INFO - Starting background training thread for task training_20250912_064126
+2025-09-12 06:41:26,295 - routes.training - INFO - Started training thread for task training_20250912_064126
+2025-09-12 06:41:26,295 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-12 06:41:28,439 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-12 06:41:49,640 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-12 06:41:50,776 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-12 06:41:50,936 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-12 06:41:51,111 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-12 06:41:53,371 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-12 06:41:53,420 - routes.training - INFO - Training isolation_forest model for task training_20250912_064126
+2025-09-12 06:41:53,420 - models.model_trainer - INFO - Training Isolation Forest model...
+2025-09-12 06:41:58,479 - models.ml_pipeline - INFO - Model isolation_forest saved successfully
+2025-09-12 06:41:58,479 - models.model_trainer - INFO - Isolation Forest trained successfully with accuracy: 0.3694
+2025-09-12 06:41:58,483 - routes.training - INFO - Completed training isolation_forest for task training_20250912_064126
+2025-09-12 06:41:58,483 - routes.training - INFO - Training task training_20250912_064126 completed successfully

@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { executeQuery } = require('../config/database');
 const { logger } = require('../utils/logger');
+const mlApiService = require('../services/mlApiService');
 
 const router = express.Router();
 
@@ -65,6 +66,84 @@ router.get('/', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to retrieve models'
+    });
+  }
+});
+
+// @route   GET /api/models/training-history
+// @desc    Get training job history
+// @access  Private
+router.get('/training-history', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = (page - 1) * limit;
+    const status = req.query.status;
+
+    let query = `
+      SELECT tj.id, tj.task_id, tj.current_model as model_name, tj.model_types as algorithm, 
+             tj.status, tj.progress, tj.created_at, tj.updated_at, tj.completed_at, 
+             tj.error_details as error_message, tj.models_completed as model_paths, 
+             tj.message as metrics, u.username as created_by
+      FROM training_jobs tj
+      LEFT JOIN users u ON tj.user_id = u.id
+    `;
+    let params = [];
+
+    if (status) {
+      query += ' WHERE tj.status = ?';
+      params.push(status);
+    }
+
+    query += ' ORDER BY tj.created_at DESC LIMIT ? OFFSET ?';
+    params.push(limit, offset);
+
+    const jobs = await executeQuery(query, params);
+
+    // Parse JSON fields safely
+    const processedJobs = jobs.map(job => {
+      let model_paths = null;
+      let metrics = null;
+      let algorithm = null;
+      
+      try {
+        // models_completed is JSON array of completed models
+        model_paths = job.model_paths ? JSON.parse(job.model_paths) : null;
+      } catch (e) {
+        logger.error('Error parsing model_paths:', e);
+      }
+      
+      try {
+        // model_types is JSON array of algorithms being trained
+        algorithm = job.algorithm ? JSON.parse(job.algorithm) : null;
+      } catch (e) {
+        logger.error('Error parsing algorithm:', e);
+      }
+      
+      try {
+        // Use message field as metrics placeholder
+        metrics = job.metrics ? (typeof job.metrics === 'string' ? { message: job.metrics } : job.metrics) : null;
+      } catch (e) {
+        logger.error('Error parsing metrics:', e);
+      }
+      
+      return {
+        ...job,
+        algorithm: Array.isArray(algorithm) ? algorithm.join(', ') : (algorithm || 'Unknown'),
+        model_paths,
+        metrics
+      };
+    });
+
+    // Return empty array if no jobs
+    res.json({ success: true, data: processedJobs });
+  } catch (error) {
+    logger.error('❌ Error fetching training history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch training history',
+      error: error.message,
+      stack: error.stack
     });
   }
 });
@@ -405,6 +484,438 @@ router.delete('/results/:resultId', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to delete result'
+    });
+  }
+});
+
+// @route   POST /api/models/train
+// @desc    Start model training
+// @access  Private (Admin only)
+router.post('/train', async (req, res) => {
+  try {
+    // Check admin role
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    const { dataset_path, model_types, test_size = 0.2, random_state = 42 } = req.body;
+
+    // Validate required fields
+    if (!model_types || !Array.isArray(model_types) || model_types.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'model_types is required and must be a non-empty array'
+      });
+    }
+
+    // Validate model types
+    const validModels = ['random_forest', 'isolation_forest', 'one_class_svm', 'autoencoder'];
+    const invalidModels = model_types.filter(model => !validModels.includes(model));
+    if (invalidModels.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid model types: ${invalidModels.join(', ')}. Valid options: ${validModels.join(', ')}`
+      });
+    }
+
+    // Start training via ML API
+    const trainingRequest = {
+      dataset_path,
+      model_types,
+      test_size: parseFloat(test_size),
+      random_state: parseInt(random_state)
+    };
+
+    // Call ML API to start training
+    const mlResponse = await mlApiService.startTraining(trainingRequest);
+    
+    console.log('ML API Response:', JSON.stringify(mlResponse, null, 2));
+    
+    // The ML API returns: { success: true, task_id: "...", status: "started", message: "..." }
+    if (!mlResponse.success || !mlResponse.task_id) {
+      console.error('Invalid ML API response:', mlResponse);
+      throw new Error('Failed to start training: Invalid ML API response format');
+    }
+
+    const taskId = mlResponse.task_id;
+
+    // Store training job in database
+    await executeQuery(`
+      INSERT INTO training_jobs (
+        task_id, user_id, dataset_path, model_types, 
+        test_size, random_state, status, message
+      ) VALUES (?, ?, ?, ?, ?, ?, 'started', 'Training job initialized')
+    `, [
+      taskId, 
+      req.user.id, 
+      dataset_path || null, 
+      JSON.stringify(model_types),
+      test_size,
+      random_state
+    ]);
+
+    logger.info(`Training started by user ${req.user.username} with task ID: ${taskId}`);
+
+    res.json({
+      success: true,
+      message: 'Training started successfully',
+      data: {
+        task_id: taskId,
+        status: 'started',
+        model_types,
+        dataset_path
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error starting training:', error);
+    res.status(500).json({
+      success: false,
+      message: error.message || 'Failed to start training'
+    });
+  }
+});
+
+// @route   GET /api/models/train/status/:taskId
+// @desc    Get training status (non-blocking, instant response)
+// @access  Private (Admin only)
+router.get('/train/status/:taskId', async (req, res) => {
+  try {
+    // Check admin role
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    const { taskId } = req.params;
+
+    // Get current status from database
+    const jobs = await executeQuery(
+      'SELECT * FROM training_jobs WHERE task_id = ? AND user_id = ?',
+      [taskId, req.user.id]
+    );
+
+    if (jobs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Training job not found'
+      });
+    }
+
+    const currentJob = jobs[0];
+    
+    // Prepare response with current DB status
+    let statusData = {
+      task_id: taskId,
+      status: currentJob.status,
+      progress: currentJob.progress || 0,
+      current_model: currentJob.current_model,
+      message: currentJob.message || 'Training in progress',
+      models_completed: JSON.parse(currentJob.models_completed || '[]'),
+      created_at: currentJob.created_at,
+      completed_at: currentJob.completed_at
+    };
+
+    // Only try to update from ML API if status is active and not too frequent
+    if (currentJob.status === 'started' || currentJob.status === 'in_progress') {
+      try {
+        // Make a quick, non-blocking call to ML API for fresh status
+        const mlResponse = await mlApiService.getTrainingStatus(taskId);
+        
+        if (mlResponse.success && mlResponse.data) {
+          const mlStatusData = mlResponse.data;
+          
+          // Update database in background (don't wait for it)
+          executeQuery(`
+            UPDATE training_jobs SET 
+              status = ?, 
+              progress = ?, 
+              current_model = ?, 
+              message = ?, 
+              models_completed = ?,
+              model_paths = ?,
+              metrics = ?,
+              completed_at = CASE 
+                WHEN ? IN ('completed', 'failed') AND completed_at IS NULL 
+                THEN NOW() 
+                ELSE completed_at 
+              END
+            WHERE task_id = ?
+          `, [
+            mlStatusData.status,
+            mlStatusData.progress || 0,
+            mlStatusData.current_model || null,
+            mlStatusData.message || '',
+            JSON.stringify(mlStatusData.models_completed || []),
+            JSON.stringify(mlStatusData.model_paths || {}),
+            JSON.stringify(mlStatusData.model_metrics || {}),
+            mlStatusData.status,
+            taskId
+          ]).catch(err => logger.error('Error updating training job:', err));
+
+          // Return fresh data from ML API
+          statusData = mlStatusData;
+        }
+      } catch (error) {
+        // Log error but don't fail the request - return DB status
+        logger.warn(`Failed to fetch fresh status for ${taskId}: ${error.message}`);
+      }
+    }
+
+    res.json({
+      success: true,
+      message: 'Training status retrieved successfully',
+      data: statusData
+    });
+
+  } catch (error) {
+    logger.error('Error getting training status:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get training status'
+    });
+  }
+});
+
+// @route   GET /api/models/train/history
+// @desc    Get training history
+// @access  Private (Admin only)
+router.get('/train/history', async (req, res) => {
+  try {
+    // Check admin role
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = parseInt(req.query.offset) || 0;
+
+    // Get training history from database
+    const jobs = await executeQuery(`
+      SELECT tj.*, u.username as created_by_username
+      FROM training_jobs tj
+      JOIN users u ON tj.user_id = u.id
+      ORDER BY tj.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    // Get total count
+    const [{ total }] = await executeQuery('SELECT COUNT(*) as total FROM training_jobs');
+
+    // Parse JSON fields
+    const jobsWithParsedData = jobs.map(job => ({
+      ...job,
+      model_types: JSON.parse(job.model_types || '[]'),
+      models_completed: JSON.parse(job.models_completed || '[]'),
+      model_paths: JSON.parse(job.model_paths || '{}'),
+      metrics: JSON.parse(job.metrics || '{}')
+    }));
+
+    res.json({
+      success: true,
+      message: 'Training history retrieved successfully',
+      data: {
+        jobs: jobsWithParsedData,
+        pagination: {
+          total,
+          limit,
+          offset,
+          hasMore: (offset + limit) < total
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error getting training history:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get training history'
+    });
+  }
+});
+
+// @route   DELETE /api/models/train/cancel/:taskId
+// @desc    Cancel training job
+// @access  Private (Admin only)
+router.delete('/train/cancel/:taskId', async (req, res) => {
+  try {
+    // Check admin role
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    const { taskId } = req.params;
+
+    // Check if training job exists and belongs to user
+    const jobs = await executeQuery(
+      'SELECT * FROM training_jobs WHERE task_id = ? AND user_id = ?',
+      [taskId, req.user.id]
+    );
+
+    if (jobs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Training job not found'
+      });
+    }
+
+    const job = jobs[0];
+
+    // Check if job can be cancelled
+    if (['completed', 'failed', 'cancelled'].includes(job.status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Cannot cancel job with status: ${job.status}`
+      });
+    }
+
+    // Try to cancel via ML API
+    try {
+      await mlApiService.cancelTraining(taskId);
+    } catch (mlError) {
+      logger.warn(`ML API cancel failed for ${taskId}: ${mlError.message}`);
+      // Continue with database update even if ML API fails
+    }
+
+    // Update database status
+    await executeQuery(`
+      UPDATE training_jobs 
+      SET status = 'cancelled', message = 'Training cancelled by user', completed_at = NOW()
+      WHERE task_id = ?
+    `, [taskId]);
+
+    logger.info(`Training job ${taskId} cancelled by user ${req.user.username}`);
+
+    res.json({
+      success: true,
+      message: 'Training job cancelled successfully',
+      data: { task_id: taskId, status: 'cancelled' }
+    });
+
+  } catch (error) {
+    logger.error('Error cancelling training:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to cancel training job'
+    });
+  }
+});
+
+// @route   DELETE /api/models/train/:taskId
+// @desc    Delete a training job and associated model files
+// @access  Private (Admin only)
+router.delete('/train/:taskId', async (req, res) => {
+  try {
+    // Check admin role
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Admin role required.'
+      });
+    }
+
+    const { taskId } = req.params;
+
+    // Get job details before deletion
+    const jobs = await executeQuery(
+      'SELECT * FROM training_jobs WHERE task_id = ? AND user_id = ?',
+      [taskId, req.user.id]
+    );
+
+    if (jobs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Training job not found'
+      });
+    }
+
+    const job = jobs[0];
+
+    // Try to delete via ML API first (handles file deletion)
+    try {
+      await mlApiService.deleteTrainingJob(taskId);
+    } catch (mlError) {
+      logger.warn(`ML API delete failed for ${taskId}: ${mlError.message}`);
+      // Continue with database deletion even if ML API fails
+    }
+
+    // Delete from database
+    await executeQuery('DELETE FROM training_jobs WHERE task_id = ?', [taskId]);
+
+    logger.info(`Training job ${taskId} deleted by user ${req.user.username}`);
+
+    res.json({
+      success: true,
+      message: 'Training job deleted successfully',
+      data: { task_id: taskId }
+    });
+
+  } catch (error) {
+    logger.error('Error deleting training job:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete training job'
+    });
+  }
+});
+
+// @route   DELETE /api/models/training/:id
+// @desc    Delete a training job by ID (for frontend compatibility)
+// @access  Private (Admin/Super Admin only)
+router.delete('/training/:id', async (req, res) => {
+  try {
+    // Check admin role
+    if (!req.user?.role || !['admin', 'super_admin'].includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. Administrator role required.'
+      });
+    }
+
+    const { id } = req.params;
+
+    // Get job details before deletion
+    const jobs = await executeQuery(
+      'SELECT * FROM training_jobs WHERE id = ?',
+      [id]
+    );
+
+    if (jobs.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Training job not found'
+      });
+    }
+
+    const job = jobs[0];
+
+    // Delete the job from database
+    await executeQuery('DELETE FROM training_jobs WHERE id = ?', [id]);
+
+    logger.info(`Training job ${id} deleted by user ${req.user.id}`);
+
+    res.json({
+      success: true,
+      message: 'Training job deleted successfully',
+      data: { id: parseInt(id) }
+    });
+
+  } catch (error) {
+    logger.error('Error deleting training job:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to delete training job'
     });
   }
 });

@@ -2,6 +2,9 @@ from fastapi import APIRouter, HTTPException, BackgroundTasks, Form
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
+import threading
+import time
+from datetime import datetime
 from models.model_trainer import ModelTrainer
 from models.data_processor import DataProcessor
 from utils.response_formatter import ResponseFormatter
@@ -14,8 +17,9 @@ model_trainer = ModelTrainer()
 data_processor = DataProcessor()
 response_formatter = ResponseFormatter()
 
-# Global variable for training status tracking
-training_tasks = {}
+# Global dictionary for training status tracking (thread-safe)
+training_jobs = {}
+job_lock = threading.Lock()
 
 class TrainingRequest(BaseModel):
     dataset_path: Optional[str] = None
@@ -24,18 +28,122 @@ class TrainingRequest(BaseModel):
     random_state: int = 42
     outlier_method: str = "iqr_cap"
 
-class TrainingStatus(BaseModel):
-    task_id: str
-    status: str  # 'started', 'in_progress', 'completed', 'failed'
-    progress: float
-    message: str
-    models_completed: List[str]
-    current_model: Optional[str] = None
-    error_details: Optional[str] = None
+def update_job_status(task_id: str, **updates):
+    """Thread-safe job status update"""
+    with job_lock:
+        if task_id in training_jobs:
+            training_jobs[task_id].update(updates)
+
+def run_training_thread(task_id: str, request: TrainingRequest):
+    """Run training in a separate thread"""
+    try:
+        logger.info(f"Starting background training thread for task {task_id}")
+        
+        update_job_status(task_id, 
+            status="in_progress", 
+            message="Loading and processing dataset", 
+            progress=5.0
+        )
+        
+        # Use default dataset if none provided
+        dataset_path = request.dataset_path or "c:\\Users\\adnan\\OneDrive\\Documents\\Projects\\Zero_Day_Attack\\dataset\\unswnb15_dataset.csv"
+        
+        # Process dataset
+        logger.info(f"Processing dataset: {dataset_path}")
+        processed_data = data_processor.process_dataset(dataset_path)
+        
+        update_job_status(task_id, 
+            message="Dataset processed, starting model training", 
+            progress=20.0
+        )
+        
+        # Train each model
+        total_models = len(request.model_types)
+        results = {}
+        model_paths = {}
+        model_metrics = {}
+        
+        for i, model_type in enumerate(request.model_types):
+            try:
+                update_job_status(task_id, 
+                    current_model=model_type,
+                    message=f"Training {model_type} model ({i+1}/{total_models})"
+                )
+                
+                logger.info(f"Training {model_type} model for task {task_id}")
+                
+                # Train the model
+                result = model_trainer.train_model(
+                    model_type,
+                    processed_data["X_train"],
+                    processed_data["X_test"],
+                    processed_data["y_train"],
+                    processed_data["y_test"],
+                    processed_data["preprocessor"]
+                )
+                
+                results[model_type] = {
+                    "success": True,
+                    "performance": result["performance"]
+                }
+                
+                # Store model path and metrics
+                model_path = f"saved_models/{model_type}.pkl"
+                model_paths[model_type] = model_path
+                model_metrics[model_type] = result["performance"]
+                
+                # Update completed models list
+                with job_lock:
+                    if task_id in training_jobs:
+                        if "models_completed" not in training_jobs[task_id]:
+                            training_jobs[task_id]["models_completed"] = []
+                        training_jobs[task_id]["models_completed"].append(model_type)
+                
+                update_job_status(task_id, 
+                    progress=20.0 + (70.0 * (i + 1) / total_models)
+                )
+                
+                logger.info(f"Completed training {model_type} for task {task_id}")
+                
+            except Exception as e:
+                logger.error(f"Error training {model_type} for task {task_id}: {e}")
+                results[model_type] = {
+                    "success": False,
+                    "error": str(e)
+                }
+        
+        # Final status update
+        successful_models = [model for model, result in results.items() if result.get("success")]
+        failed_models = [model for model, result in results.items() if not result.get("success")]
+        
+        if successful_models:
+            update_job_status(task_id,
+                status="completed",
+                message=f"Training completed. Success: {len(successful_models)}, Failed: {len(failed_models)}",
+                progress=100.0,
+                model_paths=model_paths,
+                model_metrics=model_metrics
+            )
+            logger.info(f"Training task {task_id} completed successfully")
+        else:
+            update_job_status(task_id,
+                status="failed",
+                message="All model training failed",
+                error_details=f"Failed models: {failed_models}"
+            )
+            logger.error(f"Training task {task_id} failed completely")
+        
+    except Exception as e:
+        logger.error(f"Background training failed for task {task_id}: {e}")
+        update_job_status(task_id,
+            status="failed",
+            message=f"Training failed: {str(e)}",
+            error_details=str(e)
+        )
 
 @router.post("/train")
-async def start_training(request: TrainingRequest, background_tasks: BackgroundTasks):
-    """Start model training in background"""
+async def start_training(request: TrainingRequest):
+    """Start model training in background thread"""
     try:
         # Validate model types
         valid_models = ["random_forest", "isolation_forest", "one_class_svm", "autoencoder"]
@@ -47,30 +155,38 @@ async def start_training(request: TrainingRequest, background_tasks: BackgroundT
             )
         
         # Generate unique task ID
-        from datetime import datetime
         task_id = f"training_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
-        # Initialize training status
-        training_tasks[task_id] = TrainingStatus(
-            task_id=task_id,
-            status="started",
-            progress=0.0,
-            message="Training job initialized",
-            models_completed=[]
-        )
+        # Initialize training status in thread-safe way
+        with job_lock:
+            training_jobs[task_id] = {
+                "task_id": task_id,
+                "status": "started",
+                "progress": 0.0,
+                "message": "Training job initialized",
+                "models_completed": [],
+                "current_model": None,
+                "error_details": None,
+                "created_at": datetime.now().isoformat()
+            }
         
-        # Add background task
-        background_tasks.add_task(
-            train_models_background,
-            task_id,
-            request
+        # Start training in background thread
+        training_thread = threading.Thread(
+            target=run_training_thread,
+            args=(task_id, request),
+            daemon=True
         )
+        training_thread.start()
         
-        return response_formatter.training_response(
-            task_id=task_id,
-            status="started",
-            message="Training started in background"
-        )
+        logger.info(f"Started training thread for task {task_id}")
+        
+        return {
+            "success": True,
+            "task_id": task_id,
+            "status": "started", 
+            "progress": 0,
+            "message": "Training started in background"
+        }
         
     except HTTPException:
         raise
@@ -80,16 +196,19 @@ async def start_training(request: TrainingRequest, background_tasks: BackgroundT
 
 @router.get("/train/status/{task_id}")
 async def get_training_status(task_id: str):
-    """Get training status for a specific task"""
+    """Get training status for a specific task - instant response"""
     try:
-        if task_id not in training_tasks:
-            raise HTTPException(status_code=404, detail="Training task not found")
+        with job_lock:
+            if task_id not in training_jobs:
+                raise HTTPException(status_code=404, detail="Training task not found")
+            
+            job_data = training_jobs[task_id].copy()
         
-        status = training_tasks[task_id]
-        return response_formatter.success_response(
-            data=status.dict(),
-            message="Training status retrieved successfully"
-        )
+        return {
+            "success": True,
+            "data": job_data,
+            "message": "Training status retrieved successfully"
+        }
         
     except HTTPException:
         raise
@@ -101,19 +220,21 @@ async def get_training_status(task_id: str):
 async def get_active_training_tasks():
     """Get all active training tasks"""
     try:
-        active_tasks = {
-            task_id: status.dict() 
-            for task_id, status in training_tasks.items()
-            if status.status in ["started", "in_progress"]
-        }
+        with job_lock:
+            active_tasks = {
+                task_id: job_data 
+                for task_id, job_data in training_jobs.items()
+                if job_data.get("status") in ["started", "in_progress"]
+            }
         
-        return response_formatter.success_response(
-            data={
+        return {
+            "success": True,
+            "data": {
                 "active_tasks": active_tasks,
                 "total_active": len(active_tasks)
             },
-            message="Active training tasks retrieved successfully"
-        )
+            "message": "Active training tasks retrieved successfully"
+        }
         
     except Exception as e:
         logger.error(f"Error getting active tasks: {e}")
@@ -123,22 +244,24 @@ async def get_active_training_tasks():
 async def get_training_history(limit: int = 10):
     """Get training history"""
     try:
-        # Get recent training tasks
-        sorted_tasks = sorted(
-            training_tasks.items(),
-            key=lambda x: x[0],  # Sort by task_id (which includes timestamp)
-            reverse=True
-        )
+        with job_lock:
+            # Get recent training tasks
+            sorted_tasks = sorted(
+                training_jobs.items(),
+                key=lambda x: x[0],  # Sort by task_id (which includes timestamp)
+                reverse=True
+            )
         
         recent_tasks = dict(sorted_tasks[:limit])
         
         # Calculate summary statistics
-        completed_count = sum(1 for status in recent_tasks.values() if status.status == "completed")
-        failed_count = sum(1 for status in recent_tasks.values() if status.status == "failed")
+        completed_count = sum(1 for job_data in recent_tasks.values() if job_data.get("status") == "completed")
+        failed_count = sum(1 for job_data in recent_tasks.values() if job_data.get("status") == "failed")
         
-        return response_formatter.success_response(
-            data={
-                "history": {task_id: status.dict() for task_id, status in recent_tasks.items()},
+        return {
+            "success": True,
+            "data": {
+                "history": recent_tasks,
                 "summary": {
                     "total_tasks": len(recent_tasks),
                     "completed": completed_count,
@@ -146,8 +269,50 @@ async def get_training_history(limit: int = 10):
                     "success_rate": f"{(completed_count / len(recent_tasks) * 100):.1f}%" if recent_tasks else "N/A"
                 }
             },
-            message="Training history retrieved successfully"
-        )
+            "message": "Training history retrieved successfully"
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting training history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.delete("/train/{task_id}")
+async def delete_training_job(task_id: str):
+    """Delete a training job and its associated model files"""
+    try:
+        with job_lock:
+            if task_id not in training_jobs:
+                raise HTTPException(status_code=404, detail="Training job not found")
+            
+            job_data = training_jobs[task_id].copy()
+        
+        # Delete associated model files if they exist
+        if "model_paths" in job_data and job_data["model_paths"]:
+            import os
+            for model_type, model_path in job_data["model_paths"].items():
+                full_path = os.path.join("C:\\Users\\adnan\\OneDrive\\Documents\\Projects\\Zero_Day_Attack\\api", model_path)
+                if os.path.exists(full_path):
+                    try:
+                        os.remove(full_path)
+                        logger.info(f"Deleted model file: {full_path}")
+                    except Exception as e:
+                        logger.warning(f"Failed to delete model file {full_path}: {e}")
+        
+        # Remove from memory
+        with job_lock:
+            if task_id in training_jobs:
+                del training_jobs[task_id]
+        
+        return {
+            "success": True,
+            "message": f"Training job {task_id} and associated files deleted successfully"
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting training job {task_id}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
         
     except Exception as e:
         logger.error(f"Error getting training history: {e}")
@@ -156,10 +321,9 @@ async def get_training_history(limit: int = 10):
 @router.post("/train/quick")
 async def quick_train_single_model(
     model_type: str = Form(...),
-    dataset_path: Optional[str] = Form(None),
-    background_tasks: BackgroundTasks = None
+    dataset_path: Optional[str] = Form(None)
 ):
-    """Quick training for a single model"""
+    """Quick training for a single model using threading"""
     try:
         # Validate model type
         valid_models = ["random_forest", "isolation_forest", "one_class_svm", "autoencoder"]
@@ -176,28 +340,35 @@ async def quick_train_single_model(
         )
         
         # Start training
-        from datetime import datetime
         task_id = f"quick_{model_type}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         
-        training_tasks[task_id] = TrainingStatus(
-            task_id=task_id,
-            status="started",
-            progress=0.0,
-            message=f"Quick training {model_type} model",
-            models_completed=[]
-        )
+        # Initialize training status in thread-safe way
+        with job_lock:
+            training_jobs[task_id] = {
+                "task_id": task_id,
+                "status": "started",
+                "progress": 0.0,
+                "message": f"Quick training {model_type} model",
+                "models_completed": [],
+                "current_model": None,
+                "error_details": None,
+                "created_at": datetime.now().isoformat()
+            }
         
-        background_tasks.add_task(
-            train_models_background,
-            task_id,
-            request
+        # Start training in background thread
+        training_thread = threading.Thread(
+            target=run_training_thread,
+            args=(task_id, request),
+            daemon=True
         )
+        training_thread.start()
         
-        return response_formatter.training_response(
-            task_id=task_id,
-            status="started",
-            message=f"Quick training started for {model_type}"
-        )
+        return {
+            "success": True,
+            "task_id": task_id,
+            "status": "started",
+            "message": f"Quick training started for {model_type}"
+        }
         
     except HTTPException:
         raise
@@ -209,25 +380,29 @@ async def quick_train_single_model(
 async def cancel_training(task_id: str):
     """Cancel a training task (if possible)"""
     try:
-        if task_id not in training_tasks:
-            raise HTTPException(status_code=404, detail="Training task not found")
+        with job_lock:
+            if task_id not in training_jobs:
+                raise HTTPException(status_code=404, detail="Training task not found")
+            
+            job_data = training_jobs[task_id]
+            
+            if job_data.get("status") in ["completed", "failed"]:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Cannot cancel task with status: {job_data.get('status')}"
+                )
+            
+            # Mark as cancelled (actual cancellation depends on implementation)
+            training_jobs[task_id].update({
+                "status": "cancelled",
+                "message": "Training cancelled by user"
+            })
         
-        status = training_tasks[task_id]
-        
-        if status.status in ["completed", "failed"]:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Cannot cancel task with status: {status.status}"
-            )
-        
-        # Mark as cancelled (actual cancellation depends on implementation)
-        status.status = "cancelled"
-        status.message = "Training cancelled by user"
-        
-        return response_formatter.success_response(
-            data={"task_id": task_id, "status": "cancelled"},
-            message="Training task cancelled"
-        )
+        return {
+            "success": True,
+            "data": {"task_id": task_id, "status": "cancelled"},
+            "message": "Training task cancelled"
+        }
         
     except HTTPException:
         raise
@@ -325,80 +500,3 @@ async def get_training_recommendations(
     except Exception as e:
         logger.error(f"Error generating training recommendations: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-async def train_models_background(task_id: str, request: TrainingRequest):
-    """Background task for training models"""
-    try:
-        logger.info(f"Starting background training for task {task_id}")
-        status = training_tasks[task_id]
-        status.status = "in_progress"
-        status.message = "Loading and processing dataset"
-        status.progress = 5.0
-        
-        # Use default dataset if none provided
-        dataset_path = request.dataset_path or "c:\\Users\\adnan\\OneDrive\\Documents\\Projects\\Zero_Day_Attack\\dataset\\unswnb15_dataset.csv"
-        
-        # Process dataset
-        logger.info(f"Processing dataset: {dataset_path}")
-        processed_data = data_processor.process_dataset(dataset_path)
-        
-        status.message = "Dataset processed, starting model training"
-        status.progress = 20.0
-        
-        # Train each model
-        total_models = len(request.model_types)
-        results = {}
-        
-        for i, model_type in enumerate(request.model_types):
-            try:
-                status.current_model = model_type
-                status.message = f"Training {model_type} model ({i+1}/{total_models})"
-                logger.info(f"Training {model_type} model for task {task_id}")
-                
-                # Train the model
-                result = model_trainer.train_model(
-                    model_type,
-                    processed_data["X_train"],
-                    processed_data["X_test"],
-                    processed_data["y_train"],
-                    processed_data["y_test"],
-                    processed_data["preprocessor"]
-                )
-                
-                results[model_type] = {
-                    "success": True,
-                    "performance": result["performance"]
-                }
-                
-                status.models_completed.append(model_type)
-                status.progress = 20.0 + (70.0 * (i + 1) / total_models)
-                logger.info(f"Completed training {model_type} for task {task_id}")
-                
-            except Exception as e:
-                logger.error(f"Error training {model_type} for task {task_id}: {e}")
-                results[model_type] = {
-                    "success": False,
-                    "error": str(e)
-                }
-        
-        # Final status update
-        successful_models = [model for model, result in results.items() if result.get("success")]
-        failed_models = [model for model, result in results.items() if not result.get("success")]
-        
-        if successful_models:
-            status.status = "completed"
-            status.message = f"Training completed. Success: {len(successful_models)}, Failed: {len(failed_models)}"
-            status.progress = 100.0
-            logger.info(f"Training task {task_id} completed successfully")
-        else:
-            status.status = "failed"
-            status.message = "All model training failed"
-            status.error_details = f"Failed models: {failed_models}"
-            logger.error(f"Training task {task_id} failed completely")
-        
-    except Exception as e:
-        logger.error(f"Background training failed for task {task_id}: {e}")
-        status = training_tasks[task_id]
-        status.status = "failed"
-        status.message = f"Training failed: {str(e)}"
-        status.error_details = str(e)

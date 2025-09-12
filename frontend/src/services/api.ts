@@ -296,6 +296,32 @@ export const modelApi = {
   deleteResult: async (resultId: number): Promise<ApiResponse> => {
     return apiClient.delete(`/models/results/${resultId}`);
   },
+
+  // Training API
+  startTraining: async (trainingData: {
+    model_types: string[];
+    test_size?: number;
+    random_state?: number;
+    dataset_path?: string | null;
+  }): Promise<ApiResponse<{ task_id: string; status: string; model_types: string[]; dataset_path: string }>> => {
+    return apiClient.post('/models/train', trainingData);
+  },
+
+  getTrainingStatus: async (taskId: string): Promise<ApiResponse<{
+    task_id: string;
+    status: string;
+    progress: number;
+    message: string;
+    current_model?: string;
+    models_completed: string[];
+    error_details?: string;
+  }>> => {
+    return apiClient.get(`/models/train/status/${taskId}`);
+  },
+
+  cancelTraining: async (taskId: string): Promise<ApiResponse> => {
+    return apiClient.delete(`/models/train/cancel/${taskId}`);
+  },
 };
 
 // Dashboard API
