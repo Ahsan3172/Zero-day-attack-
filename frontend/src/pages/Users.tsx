@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Users as UsersIcon, Search, UserPlus, Shield, User, Clock, RefreshCw, Trash2 } from "lucide-react";
+import { Users as UsersIcon, Search, UserPlus, Shield, User, Clock, RefreshCw, Trash2, UserCog } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
@@ -183,6 +183,64 @@ const Users = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to delete user",
+        variant: "destructive"
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleToggleRole = async (userId: number, username: string, currentRole: string) => {
+    const newRole = currentRole === 'admin' ? 'user' : 'admin';
+    const actionText = newRole === 'admin' ? 'Make Admin' : 'Remove Admin';
+    
+    if (!confirm(`Are you sure you want to change ${username}'s role to ${newRole}?`)) {
+      return;
+    }
+
+    try {
+      setActionLoading(`role-${userId}`);
+      
+      // Optimistic update - update UI immediately
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, role: newRole as 'admin' | 'user' }
+            : user
+        )
+      );
+      
+      const response = await adminApi.updateUserRole(userId, newRole as 'admin' | 'user');
+      
+      if (response.success) {
+        toast({
+          title: "Role updated",
+          description: `${username} is now ${newRole === 'admin' ? 'an admin' : 'a regular user'}`,
+        });
+      } else {
+        // Revert optimistic update on failure
+        setUsers(prevUsers => 
+          prevUsers.map(user => 
+            user.id === userId 
+              ? { ...user, role: currentRole as 'admin' | 'user' }
+              : user
+          )
+        );
+        throw new Error(response.message);
+      }
+    } catch (error: any) {
+      // Revert optimistic update on error
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === userId 
+            ? { ...user, role: currentRole as 'admin' | 'user' }
+            : user
+        )
+      );
+      
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user role",
         variant: "destructive"
       });
     } finally {
@@ -431,21 +489,36 @@ const Users = () => {
                         </>
                       )}
                       {user.status === "approved" && user.id !== currentUser?.id && (
-                        <Button 
-                          size="sm" 
-                          variant="destructive"
-                          onClick={() => handleDeleteUser(user.id, user.username)}
-                          disabled={actionLoading === `delete-${user.id}`}
-                        >
-                          {actionLoading === `delete-${user.id}` ? (
-                            <RefreshCw className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <>
-                              <Trash2 className="h-4 w-4 mr-1" />
-                              Delete
-                            </>
-                          )}
-                        </Button>
+                        <>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleToggleRole(user.id, user.username, user.role)}
+                            disabled={actionLoading === `role-${user.id}`}
+                          >
+                            {actionLoading === `role-${user.id}` ? (
+                              <RefreshCw className="h-4 w-4 animate-spin mr-1" />
+                            ) : (
+                              <UserCog className="h-4 w-4 mr-1" />
+                            )}
+                            {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="destructive"
+                            onClick={() => handleDeleteUser(user.id, user.username)}
+                            disabled={actionLoading === `delete-${user.id}`}
+                          >
+                            {actionLoading === `delete-${user.id}` ? (
+                              <RefreshCw className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <>
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Delete
+                              </>
+                            )}
+                          </Button>
+                        </>
                       )}
                     </div>
                   </div>

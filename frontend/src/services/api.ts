@@ -378,6 +378,10 @@ export const adminApi = {
     return apiClient.post('/admin/users/invite', userData);
   },
 
+  updateUserRole: async (userId: number, role: 'admin' | 'user'): Promise<ApiResponse<{ userId: number; newRole: string }>> => {
+    return apiClient.put(`/users/role/${userId}`, { role });
+  },
+
   trainModel: async (modelData: {
     name: string;
     description: string;

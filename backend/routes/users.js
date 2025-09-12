@@ -345,4 +345,100 @@ router.delete('/account', [
   }
 });
 
+// @route   PUT /api/users/role/:id
+// @desc    Update user role (admin only)
+// @access  Private (Admin only)
+router.put('/role/:id', [
+  body('role')
+    .isIn(['admin', 'user'])
+    .withMessage('Role must be either "admin" or "user"')
+], async (req, res) => {
+  try {
+    // Check if user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        message: 'Admin access required'
+      });
+    }
+
+    // Validate request
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const userId = parseInt(req.params.id);
+    const { role } = req.body;
+
+    if (isNaN(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid user ID'
+      });
+    }
+
+    // Check if target user exists and get current role
+    const targetUser = await executeQuery(
+      'SELECT id, username, role, status FROM users WHERE id = ?',
+      [userId]
+    );
+
+    if (targetUser.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
+    // Don't allow changing own role
+    if (userId === req.user.id) {
+      return res.status(400).json({
+        success: false,
+        message: 'Cannot change your own role'
+      });
+    }
+
+    // If trying to remove admin role, ensure at least one admin remains
+    if (targetUser[0].role === 'admin' && role === 'user') {
+      const adminCount = await executeQuery(
+        'SELECT COUNT(*) as count FROM users WHERE role = "admin" AND status = "approved"'
+      );
+
+      if (adminCount[0].count <= 1) {
+        return res.status(400).json({
+          success: false,
+          message: 'Cannot remove admin role. At least one admin must remain.'
+        });
+      }
+    }
+
+    // Update user role
+    await executeQuery(
+      'UPDATE users SET role = ?, updated_at = NOW() WHERE id = ?',
+      [role, userId]
+    );
+
+    logger.info(`Admin ${req.user.id} (${req.user.username}) changed user ${userId} (${targetUser[0].username}) role from ${targetUser[0].role} to ${role}`);
+
+    res.json({
+      success: true,
+      message: 'Role updated successfully',
+      userId: userId,
+      newRole: role
+    });
+
+  } catch (error) {
+    logger.error('Error updating user role:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to update user role'
+    });
+  }
+});
+
 module.exports = router;

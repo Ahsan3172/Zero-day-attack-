@@ -304,3 +304,8 @@
 {"level":"info","message":"MySQL connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-12 07:20:22"}
 {"level":"info","message":"Database connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-12 07:20:22"}
 {"level":"info","message":"Server running on port 5000 in development mode","service":"zero-day-attack-api","timestamp":"2025-09-12 07:20:22"}
+{"level":"info","message":"MySQL connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-12 07:42:53"}
+{"level":"info","message":"Database connected successfully","service":"zero-day-attack-api","timestamp":"2025-09-12 07:42:53"}
+{"level":"info","message":"Server running on port 5000 in development mode","service":"zero-day-attack-api","timestamp":"2025-09-12 07:42:53"}
+{"level":"info","message":"Admin 3 (Zubair) changed user 5 (zubair1) role from user to admin","service":"zero-day-attack-api","timestamp":"2025-09-12 07:43:42"}
+{"level":"info","message":"User logged in: admin123@gmail.com","service":"zero-day-attack-api","timestamp":"2025-09-12 07:44:08"}
