@@ -85,7 +85,7 @@ router.get('/training-history', async (req, res) => {
              tj.status, tj.progress, tj.created_at, tj.updated_at, tj.completed_at, 
              tj.error_details as error_message, tj.models_completed as model_paths, 
              tj.message as metrics, u.username as created_by
-      FROM training_jobs tj
+      FROM ml_models tj
       LEFT JOIN users u ON tj.user_id = u.id
     `;
     let params = [];
@@ -544,7 +544,7 @@ router.post('/train', async (req, res) => {
 
     // Store training job in database
     await executeQuery(`
-      INSERT INTO training_jobs (
+      INSERT INTO ml_models (
         task_id, user_id, dataset_path, model_types, 
         test_size, random_state, status, message
       ) VALUES (?, ?, ?, ?, ?, ?, 'started', 'Training job initialized')
@@ -596,7 +596,7 @@ router.get('/train/status/:taskId', async (req, res) => {
 
     // Get current status from database
     const jobs = await executeQuery(
-      'SELECT * FROM training_jobs WHERE task_id = ? AND user_id = ?',
+      'SELECT * FROM ml_models WHERE task_id = ? AND user_id = ?',
       [taskId, req.user.id]
     );
 
@@ -632,7 +632,7 @@ router.get('/train/status/:taskId', async (req, res) => {
           
           // Update database in background (don't wait for it)
           executeQuery(`
-            UPDATE training_jobs SET 
+            UPDATE ml_models SET 
               status = ?, 
               progress = ?, 
               current_model = ?, 
@@ -701,14 +701,14 @@ router.get('/train/history', async (req, res) => {
     // Get training history from database
     const jobs = await executeQuery(`
       SELECT tj.*, u.username as created_by_username
-      FROM training_jobs tj
+      FROM ml_models tj
       JOIN users u ON tj.user_id = u.id
       ORDER BY tj.created_at DESC
       LIMIT ? OFFSET ?
     `, [limit, offset]);
 
     // Get total count
-    const [{ total }] = await executeQuery('SELECT COUNT(*) as total FROM training_jobs');
+    const [{ total }] = await executeQuery('SELECT COUNT(*) as total FROM ml_models');
 
     // Parse JSON fields
     const jobsWithParsedData = jobs.map(job => ({

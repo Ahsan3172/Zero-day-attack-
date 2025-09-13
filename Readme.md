@@ -125,7 +125,7 @@ CREATE TABLE users (
 );
 
 -- Training jobs table
-CREATE TABLE training_jobs (
+CREATE TABLE ml_models (
     id VARCHAR(255) PRIMARY KEY,
     model_type VARCHAR(100) NOT NULL,
     dataset_name VARCHAR(255) NOT NULL,

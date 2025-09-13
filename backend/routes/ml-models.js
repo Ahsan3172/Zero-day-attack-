@@ -284,7 +284,7 @@ router.post('/train', authenticateToken, requireRole(['admin', 'data_scientist']
     
     // Save training job to database
     await executeQuery(`
-      INSERT INTO training_jobs (user_id, task_id, config, status, created_at)
+      INSERT INTO ml_models (user_id, task_id, config, status, created_at)
       VALUES (?, ?, ?, 'started', NOW())
     `, [req.user.id, trainingResult.data.task_id, JSON.stringify(trainingConfig)]);
 
@@ -321,7 +321,7 @@ router.post('/train/quick', authenticateToken, requireRole(['admin', 'data_scien
     
     // Save quick training job to database
     await executeQuery(`
-      INSERT INTO training_jobs (user_id, task_id, config, status, created_at)
+      INSERT INTO ml_models (user_id, task_id, config, status, created_at)
       VALUES (?, ?, ?, 'started', NOW())
     `, [req.user.id, trainingResult.data.task_id, JSON.stringify({ model_type, dataset_path })]);
 
@@ -350,7 +350,7 @@ router.get('/train/status/:taskId', authenticateToken, async (req, res) => {
     
     // Update database with current status
     await executeQuery(`
-      UPDATE training_jobs SET status = ?, updated_at = NOW()
+      UPDATE ml_models SET status = ?, updated_at = NOW()
       WHERE task_id = ?
     `, [status.data.status, taskId]);
 
@@ -382,7 +382,7 @@ router.get('/train/history', authenticateToken, async (req, res) => {
     // Get from database
     const dbHistory = await executeQuery(`
       SELECT tj.*, u.username as created_by
-      FROM training_jobs tj
+      FROM ml_models tj
       JOIN users u ON tj.user_id = u.id
       ORDER BY tj.created_at DESC
       LIMIT ?

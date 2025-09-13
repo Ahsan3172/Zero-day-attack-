@@ -21,7 +21,7 @@ response_formatter = ResponseFormatter()
 file_handler = FileHandler()
 
 # Global dictionary for training status tracking (thread-safe)
-training_jobs = {}
+ml_models = {}
 job_lock = threading.Lock()
 
 class TrainingRequest(BaseModel):
@@ -102,8 +102,8 @@ async def train_model_simple(model_name: str = Form(...), file: UploadFile = Fil
 def update_job_status(task_id: str, **updates):
     """Thread-safe job status update"""
     with job_lock:
-        if task_id in training_jobs:
-            training_jobs[task_id].update(updates)
+        if task_id in ml_models:
+            ml_models[task_id].update(updates)
 
 def run_training_thread(task_id: str, request: TrainingRequest):
     """Run training in a separate thread"""
@@ -165,10 +165,10 @@ def run_training_thread(task_id: str, request: TrainingRequest):
                 
                 # Update completed models list
                 with job_lock:
-                    if task_id in training_jobs:
-                        if "models_completed" not in training_jobs[task_id]:
-                            training_jobs[task_id]["models_completed"] = []
-                        training_jobs[task_id]["models_completed"].append(model_type)
+                    if task_id in ml_models:
+                        if "models_completed" not in ml_models[task_id]:
+                            ml_models[task_id]["models_completed"] = []
+                        ml_models[task_id]["models_completed"].append(model_type)
                 
                 update_job_status(task_id, 
                     progress=20.0 + (70.0 * (i + 1) / total_models)
@@ -230,7 +230,7 @@ async def start_training(request: TrainingRequest):
         
         # Initialize training status in thread-safe way
         with job_lock:
-            training_jobs[task_id] = {
+            ml_models[task_id] = {
                 "task_id": task_id,
                 "status": "started",
                 "progress": 0.0,
@@ -270,10 +270,10 @@ async def get_training_status(task_id: str):
     """Get training status for a specific task - instant response"""
     try:
         with job_lock:
-            if task_id not in training_jobs:
+            if task_id not in ml_models:
                 raise HTTPException(status_code=404, detail="Training task not found")
             
-            job_data = training_jobs[task_id].copy()
+            job_data = ml_models[task_id].copy()
         
         return {
             "success": True,
@@ -294,7 +294,7 @@ async def get_active_training_tasks():
         with job_lock:
             active_tasks = {
                 task_id: job_data 
-                for task_id, job_data in training_jobs.items()
+                for task_id, job_data in ml_models.items()
                 if job_data.get("status") in ["started", "in_progress"]
             }
         
@@ -318,7 +318,7 @@ async def get_training_history(limit: int = 10):
         with job_lock:
             # Get recent training tasks
             sorted_tasks = sorted(
-                training_jobs.items(),
+                ml_models.items(),
                 key=lambda x: x[0],  # Sort by task_id (which includes timestamp)
                 reverse=True
             )
@@ -352,10 +352,10 @@ async def delete_training_job(task_id: str):
     """Delete a training job and its associated model files"""
     try:
         with job_lock:
-            if task_id not in training_jobs:
+            if task_id not in ml_models:
                 raise HTTPException(status_code=404, detail="Training job not found")
             
-            job_data = training_jobs[task_id].copy()
+            job_data = ml_models[task_id].copy()
         
         # Delete associated model files if they exist
         if "model_paths" in job_data and job_data["model_paths"]:
@@ -371,8 +371,8 @@ async def delete_training_job(task_id: str):
         
         # Remove from memory
         with job_lock:
-            if task_id in training_jobs:
-                del training_jobs[task_id]
+            if task_id in ml_models:
+                del ml_models[task_id]
         
         return {
             "success": True,
@@ -415,7 +415,7 @@ async def quick_train_single_model(
         
         # Initialize training status in thread-safe way
         with job_lock:
-            training_jobs[task_id] = {
+            ml_models[task_id] = {
                 "task_id": task_id,
                 "status": "started",
                 "progress": 0.0,
@@ -452,10 +452,10 @@ async def cancel_training(task_id: str):
     """Cancel a training task (if possible)"""
     try:
         with job_lock:
-            if task_id not in training_jobs:
+            if task_id not in ml_models:
                 raise HTTPException(status_code=404, detail="Training task not found")
             
-            job_data = training_jobs[task_id]
+            job_data = ml_models[task_id]
             
             if job_data.get("status") in ["completed", "failed"]:
                 raise HTTPException(
@@ -464,7 +464,7 @@ async def cancel_training(task_id: str):
                 )
             
             # Mark as cancelled (actual cancellation depends on implementation)
-            training_jobs[task_id].update({
+            ml_models[task_id].update({
                 "status": "cancelled",
                 "message": "Training cancelled by user"
             })

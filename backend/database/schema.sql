@@ -20,25 +20,6 @@ CREATE TABLE users (
     FOREIGN KEY (approved_by) REFERENCES users(id)
 );
 
--- ML Models table to store different models
-CREATE TABLE ml_models (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    description TEXT,
-    model_type ENUM('classification', 'regression', 'clustering') DEFAULT 'classification',
-    algorithm VARCHAR(50) NOT NULL, -- e.g., 'random_forest', 'svm', 'neural_network'
-    file_path VARCHAR(255), -- Path to saved model file
-    accuracy DECIMAL(5,4), -- Model accuracy (0.0000 to 1.0000)
-    precision_score DECIMAL(5,4),
-    recall_score DECIMAL(5,4),
-    f1_score DECIMAL(5,4),
-    status ENUM('training', 'ready', 'failed') DEFAULT 'training',
-    created_by INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (created_by) REFERENCES users(id)
-);
-
 -- Dataset uploads table
 CREATE TABLE dataset_uploads (
     id INT PRIMARY KEY AUTO_INCREMENT,
@@ -85,7 +66,7 @@ CREATE TABLE user_sessions (
 );
 
 -- Model training jobs
-CREATE TABLE training_jobs (
+CREATE TABLE ml_models (
     id INT PRIMARY KEY AUTO_INCREMENT,
     task_id VARCHAR(100) UNIQUE NOT NULL,
     user_id INT NOT NULL,
@@ -104,17 +85,6 @@ CREATE TABLE training_jobs (
     completed_at TIMESTAMP NULL,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
-
--- Model training logs
-CREATE TABLE training_logs (
-    id INT PRIMARY KEY AUTO_INCREMENT,
-    model_id INT NOT NULL,
-    log_message TEXT NOT NULL,
-    log_level ENUM('info', 'warning', 'error', 'debug') DEFAULT 'info',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (model_id) REFERENCES ml_models(id) ON DELETE CASCADE
-);
-
 -- System settings table
 CREATE TABLE system_settings (
     id INT PRIMARY KEY AUTO_INCREMENT,
