@@ -19,6 +19,51 @@ from .ml_pipeline import MLPipelineManager
 
 logger = logging.getLogger(__name__)
 
+class AutoencoderPipeline:
+    """Pipeline class for Autoencoder model that can be saved/loaded properly"""
+    
+    def __init__(self, preprocessor, autoencoder, threshold):
+        self.preprocessor = preprocessor
+        self.autoencoder = autoencoder
+        self.threshold = threshold
+    
+    def predict(self, X):
+        """Predict anomalies using reconstruction error threshold"""
+        try:
+            X_processed = self.preprocessor.transform(X).toarray()
+            reconstructions = self.autoencoder.predict(X_processed, verbose=0)
+            mse = np.mean(np.power(X_processed - reconstructions, 2), axis=1)
+            return (mse > self.threshold).astype(int)
+        except Exception as e:
+            logger.error(f"Error in AutoencoderPipeline predict: {e}")
+            # Fallback: return all as normal (0)
+            return np.zeros(len(X), dtype=int)
+    
+    def predict_proba(self, X):
+        """Return probability-like scores based on reconstruction error"""
+        try:
+            X_processed = self.preprocessor.transform(X).toarray()
+            reconstructions = self.autoencoder.predict(X_processed, verbose=0)
+            mse = np.mean(np.power(X_processed - reconstructions, 2), axis=1)
+            # Normalize MSE to probability-like scores
+            prob_scores = np.clip(mse / self.threshold, 0, 1)
+            return np.column_stack([1 - prob_scores, prob_scores])
+        except Exception as e:
+            logger.error(f"Error in AutoencoderPipeline predict_proba: {e}")
+            # Fallback: return neutral probabilities
+            neutral_probs = np.full((len(X), 2), 0.5)
+            return neutral_probs
+    
+    def get_reconstruction_error(self, X):
+        """Get reconstruction errors for analysis"""
+        try:
+            X_processed = self.preprocessor.transform(X).toarray()
+            reconstructions = self.autoencoder.predict(X_processed, verbose=0)
+            return np.mean(np.power(X_processed - reconstructions, 2), axis=1)
+        except Exception as e:
+            logger.error(f"Error getting reconstruction error: {e}")
+            return np.zeros(len(X))
+
 class ModelTrainer:
     """Handles training of all ML models"""
     
@@ -427,27 +472,6 @@ class ModelTrainer:
             }
             
             # Create a combined pipeline that includes preprocessor and autoencoder
-            class AutoencoderPipeline:
-                def __init__(self, preprocessor, autoencoder, threshold):
-                    self.preprocessor = preprocessor
-                    self.autoencoder = autoencoder
-                    self.threshold = threshold
-                
-                def predict(self, X):
-                    X_processed = self.preprocessor.transform(X).toarray()
-                    reconstructions = self.autoencoder.predict(X_processed, verbose=0)
-                    mse = np.mean(np.power(X_processed - reconstructions, 2), axis=1)
-                    return (mse > self.threshold).astype(int)
-                
-                def predict_proba(self, X):
-                    # For anomaly detection, return reconstruction error as probability
-                    X_processed = self.preprocessor.transform(X).toarray()
-                    reconstructions = self.autoencoder.predict(X_processed, verbose=0)
-                    mse = np.mean(np.power(X_processed - reconstructions, 2), axis=1)
-                    # Normalize MSE to probability-like scores
-                    prob_scores = np.clip(mse / self.threshold, 0, 1)
-                    return np.column_stack([1 - prob_scores, prob_scores])
-            
             pipeline = AutoencoderPipeline(preprocessor, autoencoder, error_threshold)
             
             # Save model

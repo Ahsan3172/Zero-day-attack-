@@ -759,7 +759,7 @@ router.delete('/train/cancel/:taskId', async (req, res) => {
 
     // Check if training job exists and belongs to user
     const jobs = await executeQuery(
-      'SELECT * FROM training_jobs WHERE task_id = ? AND user_id = ?',
+      'SELECT * FROM ml_models WHERE task_id = ? AND user_id = ?',
       [taskId, req.user.id]
     );
 
@@ -790,7 +790,7 @@ router.delete('/train/cancel/:taskId', async (req, res) => {
 
     // Update database status
     await executeQuery(`
-      UPDATE training_jobs 
+      UPDATE ml_models 
       SET status = 'cancelled', message = 'Training cancelled by user', completed_at = NOW()
       WHERE task_id = ?
     `, [taskId]);
@@ -829,7 +829,7 @@ router.delete('/train/:taskId', async (req, res) => {
 
     // Get job details before deletion
     const jobs = await executeQuery(
-      'SELECT * FROM training_jobs WHERE task_id = ? AND user_id = ?',
+      'SELECT * FROM ml_models WHERE task_id = ? AND user_id = ?',
       [taskId, req.user.id]
     );
 
@@ -851,7 +851,7 @@ router.delete('/train/:taskId', async (req, res) => {
     }
 
     // Delete from database
-    await executeQuery('DELETE FROM training_jobs WHERE task_id = ?', [taskId]);
+    await executeQuery('DELETE FROM ml_models WHERE task_id = ?', [taskId]);
 
     logger.info(`Training job ${taskId} deleted by user ${req.user.username}`);
 
@@ -887,7 +887,7 @@ router.delete('/training/:id', async (req, res) => {
 
     // Get job details before deletion
     const jobs = await executeQuery(
-      'SELECT * FROM training_jobs WHERE id = ?',
+      'SELECT * FROM ml_models WHERE id = ?',
       [id]
     );
 
@@ -901,7 +901,7 @@ router.delete('/training/:id', async (req, res) => {
     const job = jobs[0];
 
     // Delete the job from database
-    await executeQuery('DELETE FROM training_jobs WHERE id = ?', [id]);
+    await executeQuery('DELETE FROM ml_models WHERE id = ?', [id]);
 
     logger.info(`Training job ${id} deleted by user ${req.user.id}`);
 

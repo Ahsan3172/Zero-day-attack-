@@ -42,15 +42,53 @@ class MLPipelineManager:
         try:
             model_path = self.models_dir / f"{model_name}.pkl"
             
-            # Save the pipeline
-            joblib.dump(pipeline, model_path)
+            # Special handling for AutoencoderPipeline
+            if hasattr(pipeline, 'autoencoder') and hasattr(pipeline.autoencoder, 'save'):
+                # For TensorFlow/Keras models, save separately with proper extensions
+                autoencoder_path = self.models_dir / f"{model_name}_autoencoder.keras"
+                preprocessor_path = self.models_dir / f"{model_name}_preprocessor.pkl"
+                metadata_path = self.models_dir / f"{model_name}_metadata.json"
+                
+                # Save the autoencoder model with .keras extension
+                pipeline.autoencoder.save(autoencoder_path)
+                
+                # Save the preprocessor
+                joblib.dump(pipeline.preprocessor, preprocessor_path)
+                
+                # Save additional metadata
+                model_metadata = {
+                    "threshold": pipeline.threshold,
+                    "model_type": "autoencoder",
+                    "autoencoder_path": str(autoencoder_path),
+                    "preprocessor_path": str(preprocessor_path)
+                }
+                
+                with open(metadata_path, 'w') as f:
+                    json.dump(model_metadata, f, indent=2)
+                
+                # Calculate total size
+                total_size = 0
+                if autoencoder_path.exists():
+                    total_size += autoencoder_path.stat().st_size
+                if preprocessor_path.exists():
+                    total_size += preprocessor_path.stat().st_size
+                if metadata_path.exists():
+                    total_size += metadata_path.stat().st_size
+                
+                size_mb = round(total_size / (1024 * 1024), 2)
+                
+            else:
+                # Standard joblib saving for other models
+                joblib.dump(pipeline, model_path)
+                size_mb = round(model_path.stat().st_size / (1024 * 1024), 2)
             
             # Update metadata
             self.metadata[model_name] = {
                 "path": str(model_path),
                 "created_at": datetime.now().isoformat(),
                 "performance": performance_metrics,
-                "size_mb": round(model_path.stat().st_size / (1024 * 1024), 2)
+                "size_mb": size_mb,
+                "model_type": getattr(pipeline.__class__, '__name__', 'unknown')
             }
             
             self.save_metadata()
@@ -66,11 +104,51 @@ class MLPipelineManager:
             if model_name not in self.metadata:
                 raise ValueError(f"Model {model_name} not found")
             
-            model_path = self.metadata[model_name]["path"]
-            if not os.path.exists(model_path):
-                raise FileNotFoundError(f"Model file not found: {model_path}")
-            
-            return joblib.load(model_path)
+            # Check if this is an autoencoder model
+            if model_name == "autoencoder":
+                # Load autoencoder components separately
+                autoencoder_path = self.models_dir / f"{model_name}_autoencoder.keras"
+                preprocessor_path = self.models_dir / f"{model_name}_preprocessor.pkl"
+                metadata_path = self.models_dir / f"{model_name}_metadata.json"
+                
+                if not autoencoder_path.exists() or not preprocessor_path.exists():
+                    # Fallback to standard loading
+                    model_path = self.metadata[model_name]["path"]
+                    if not os.path.exists(model_path):
+                        raise FileNotFoundError(f"Model file not found: {model_path}")
+                    return joblib.load(model_path)
+                
+                # Import TensorFlow here to avoid issues if not available
+                try:
+                    import tensorflow as tf
+                    from .model_trainer import AutoencoderPipeline
+                    
+                    # Load components
+                    autoencoder = tf.keras.models.load_model(autoencoder_path)
+                    preprocessor = joblib.load(preprocessor_path)
+                    
+                    # Load metadata
+                    with open(metadata_path, 'r') as f:
+                        model_metadata = json.load(f)
+                    
+                    threshold = model_metadata.get("threshold", 1.0)
+                    
+                    # Reconstruct the pipeline
+                    return AutoencoderPipeline(preprocessor, autoencoder, threshold)
+                    
+                except ImportError:
+                    logger.warning("TensorFlow not available, trying standard loading")
+                    # Fallback to standard loading
+                    model_path = self.metadata[model_name]["path"]
+                    if not os.path.exists(model_path):
+                        raise FileNotFoundError(f"Model file not found: {model_path}")
+                    return joblib.load(model_path)
+            else:
+                # Standard loading for other models
+                model_path = self.metadata[model_name]["path"]
+                if not os.path.exists(model_path):
+                    raise FileNotFoundError(f"Model file not found: {model_path}")
+                return joblib.load(model_path)
             
         except Exception as e:
             logger.error(f"Error loading model {model_name}: {e}")

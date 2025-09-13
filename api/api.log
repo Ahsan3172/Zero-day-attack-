@@ -1229,3 +1229,85 @@ ValueError: Mix of label input types (string and number)
 2025-09-13 14:24:20,969 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
 2025-09-13 14:24:20,970 - routes.predictions - INFO - Fetching test history for user 1
 2025-09-13 14:24:20,973 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:26:41,690 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:26:41,692 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:26:41,695 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:26:41,698 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:39:26,178 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:39:26,190 - utils.database - INFO - Connected to MySQL database successfully
+2025-09-13 14:39:26,191 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:39:26,191 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:39:26,193 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:39:52,015 - routes.training - INFO - Starting background training thread for task training_20250913_143952
+2025-09-13 14:39:52,015 - routes.training - INFO - Started training thread for task training_20250913_143952
+2025-09-13 14:39:52,015 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-13 14:39:53,359 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-13 14:40:04,734 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-13 14:40:05,453 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-13 14:40:05,563 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-13 14:40:05,674 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-13 14:40:07,016 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-13 14:40:07,047 - routes.training - INFO - Training autoencoder model for task training_20250913_143952
+2025-09-13 14:40:07,047 - models.model_trainer - INFO - Training Autoencoder model...
+2025-09-13 14:40:56,056 - models.ml_pipeline - ERROR - Error saving model autoencoder: Can't pickle <class 'models.model_trainer.ModelTrainer.train_autoencoder.<locals>.AutoencoderPipeline'>: it's not found as models.model_trainer.ModelTrainer.train_autoencoder.<locals>.AutoencoderPipeline
+2025-09-13 14:40:56,056 - models.model_trainer - ERROR - Error training Autoencoder: Can't pickle <class 'models.model_trainer.ModelTrainer.train_autoencoder.<locals>.AutoencoderPipeline'>: it's not found as models.model_trainer.ModelTrainer.train_autoencoder.<locals>.AutoencoderPipeline
+2025-09-13 14:40:56,057 - models.model_trainer - ERROR - Error training model autoencoder: Can't pickle <class 'models.model_trainer.ModelTrainer.train_autoencoder.<locals>.AutoencoderPipeline'>: it's not found as models.model_trainer.ModelTrainer.train_autoencoder.<locals>.AutoencoderPipeline
+2025-09-13 14:40:56,057 - routes.training - ERROR - Error training autoencoder for task training_20250913_143952: Can't pickle <class 'models.model_trainer.ModelTrainer.train_autoencoder.<locals>.AutoencoderPipeline'>: it's not found as models.model_trainer.ModelTrainer.train_autoencoder.<locals>.AutoencoderPipeline
+2025-09-13 14:40:56,125 - routes.training - ERROR - Training task training_20250913_143952 failed completely
+2025-09-13 14:49:08,821 - routes.training - INFO - Starting background training thread for task training_20250913_144908
+2025-09-13 14:49:08,821 - routes.training - INFO - Started training thread for task training_20250913_144908
+2025-09-13 14:49:08,822 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-13 14:49:10,188 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-13 14:49:22,250 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-13 14:49:23,049 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-13 14:49:23,173 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-13 14:49:23,306 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-13 14:49:24,884 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-13 14:49:24,907 - routes.training - INFO - Training autoencoder model for task training_20250913_144908
+2025-09-13 14:49:24,917 - models.model_trainer - INFO - Training Autoencoder model...
+2025-09-13 14:50:20,798 - models.ml_pipeline - ERROR - Error saving model autoencoder: Invalid filepath extension for saving. Please add either a `.keras` extension for the native Keras format (recommended) or a `.h5` extension. Use `model.export(filepath)` if you want to export a SavedModel for use with TFLite/TFServing/etc. Received: filepath=saved_models\autoencoder_autoencoder.
+2025-09-13 14:50:20,801 - models.model_trainer - ERROR - Error training Autoencoder: Invalid filepath extension for saving. Please add either a `.keras` extension for the native Keras format (recommended) or a `.h5` extension. Use `model.export(filepath)` if you want to export a SavedModel for use with TFLite/TFServing/etc. Received: filepath=saved_models\autoencoder_autoencoder.
+2025-09-13 14:50:20,802 - models.model_trainer - ERROR - Error training model autoencoder: Invalid filepath extension for saving. Please add either a `.keras` extension for the native Keras format (recommended) or a `.h5` extension. Use `model.export(filepath)` if you want to export a SavedModel for use with TFLite/TFServing/etc. Received: filepath=saved_models\autoencoder_autoencoder.
+2025-09-13 14:50:20,802 - routes.training - ERROR - Error training autoencoder for task training_20250913_144908: Invalid filepath extension for saving. Please add either a `.keras` extension for the native Keras format (recommended) or a `.h5` extension. Use `model.export(filepath)` if you want to export a SavedModel for use with TFLite/TFServing/etc. Received: filepath=saved_models\autoencoder_autoencoder.
+2025-09-13 14:50:20,867 - routes.training - ERROR - Training task training_20250913_144908 failed completely
+2025-09-13 14:53:08,860 - routes.training - INFO - Starting background training thread for task training_20250913_145308
+2025-09-13 14:53:08,860 - routes.training - INFO - Started training thread for task training_20250913_145308
+2025-09-13 14:53:08,862 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-13 14:53:10,251 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-13 14:53:22,032 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-13 14:53:22,831 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-13 14:53:22,937 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-13 14:53:23,079 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-13 14:53:24,567 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-13 14:53:24,594 - routes.training - INFO - Training autoencoder model for task training_20250913_145308
+2025-09-13 14:53:24,594 - models.model_trainer - INFO - Training Autoencoder model...
+2025-09-13 14:54:17,878 - models.ml_pipeline - ERROR - Error saving model autoencoder: type object 'AutoencoderPipeline' has no attribute 'get'
+2025-09-13 14:54:17,878 - models.model_trainer - ERROR - Error training Autoencoder: type object 'AutoencoderPipeline' has no attribute 'get'
+2025-09-13 14:54:17,878 - models.model_trainer - ERROR - Error training model autoencoder: type object 'AutoencoderPipeline' has no attribute 'get'
+2025-09-13 14:54:17,878 - routes.training - ERROR - Error training autoencoder for task training_20250913_145308: type object 'AutoencoderPipeline' has no attribute 'get'
+2025-09-13 14:54:17,946 - routes.training - ERROR - Training task training_20250913_145308 failed completely
+2025-09-13 14:56:33,460 - routes.training - INFO - Starting background training thread for task training_20250913_145633
+2025-09-13 14:56:33,460 - routes.training - INFO - Started training thread for task training_20250913_145633
+2025-09-13 14:56:33,460 - routes.training - INFO - Processing dataset: c:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\dataset\unswnb15_dataset.csv
+2025-09-13 14:56:34,831 - models.data_processor - INFO - Loaded dataset with shape: (257673, 45)
+2025-09-13 14:56:46,482 - models.data_processor - INFO - Feature engineering completed successfully
+2025-09-13 14:56:47,266 - models.data_processor - INFO - Outliers capped using IQR method
+2025-09-13 14:56:47,362 - models.data_processor - INFO - Data prepared: Features shape (257673, 50), Target shape (257673,)
+2025-09-13 14:56:47,484 - models.data_processor - INFO - Preprocessor created with 47 numerical and 3 categorical features
+2025-09-13 14:56:48,959 - models.data_processor - INFO - Dataset processing completed successfully
+2025-09-13 14:56:48,995 - routes.training - INFO - Training autoencoder model for task training_20250913_145633
+2025-09-13 14:56:48,996 - models.model_trainer - INFO - Training Autoencoder model...
+2025-09-13 14:57:42,276 - models.ml_pipeline - INFO - Model autoencoder saved successfully
+2025-09-13 14:57:42,276 - models.model_trainer - INFO - Autoencoder trained successfully with accuracy: 0.3638
+2025-09-13 14:57:42,343 - routes.training - INFO - Completed training autoencoder for task training_20250913_145633
+2025-09-13 14:57:42,343 - routes.training - INFO - Training task training_20250913_145633 completed successfully
+2025-09-13 15:03:04,317 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 15:03:04,321 - routes.models - INFO - Found 5 available models: ['autoencoder', 'autoencoder_preprocessor', 'isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 15:03:04,324 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 15:03:04,347 - utils.database - INFO - Connected to MySQL database successfully
+2025-09-13 15:03:04,351 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 15:07:11,686 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 15:07:11,686 - routes.models - INFO - Found 4 available models: ['autoencoder', 'isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 15:07:11,686 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 15:07:11,719 - utils.database - INFO - Connected to MySQL database successfully
+2025-09-13 15:07:11,721 - routes.predictions - INFO - Retrieved 2 test results for user 1

@@ -35,7 +35,10 @@ async def get_available_models():
         
         # Get all .pkl files in the models directory
         model_files = list(models_path.glob("*.pkl"))
-        models = [f.stem for f in model_files if f.stem != "models_metadata"]
+        models = [f.stem for f in model_files 
+                 if f.stem != "models_metadata" 
+                 and not f.stem.endswith("_preprocessor")
+                 and not f.stem.endswith("_metadata")]
         
         logger.info(f"Found {len(models)} available models: {models}")
         
