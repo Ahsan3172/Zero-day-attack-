@@ -1,17 +1,21 @@
 import pandas as pd
 import numpy as np
+from sklearn.metrics import accuracy_score, precision_recall_fscore_support, confusion_matrix, classification_report
 from typing import Dict, List, Any, Optional
 import logging
+import joblib
+import os
 from .ml_pipeline import MLPipelineManager
 
 logger = logging.getLogger(__name__)
 
 class NetworkPredictor:
-    """Handles predictions using trained models"""
+    """Handles predictions using trained models with integrated preprocessing"""
     
     def __init__(self):
         self.ml_manager = MLPipelineManager()
         self.loaded_models = {}
+        self.models_dir = "api/saved_models"
     
     def load_model_if_needed(self, model_type: str):
         """Load model if not already loaded"""
@@ -24,53 +28,156 @@ class NetworkPredictor:
                 logger.error(f"Error loading model {model_type}: {e}")
                 raise
     
-    def predict(self, X: pd.DataFrame, model_type: str = "random_forest") -> Dict[str, Any]:
-        """Make predictions using specified model"""
+    def predict_with_pipeline(self, df: pd.DataFrame, model_name: str) -> Dict[str, Any]:
+        """
+        Make predictions using the complete pipeline (preprocessing + model)
+        This is the main method to use for predictions with the new pipeline approach
+        """
         try:
-            # Load model if needed
-            self.load_model_if_needed(model_type)
-            model = self.loaded_models[model_type]
+            # Check if model exists
+            model_path = os.path.join(self.models_dir, f"{model_name}.pkl")
+            if not os.path.exists(model_path):
+                raise FileNotFoundError(f"Model {model_name} not found at {model_path}")
             
-            # Make predictions
-            predictions = model.predict(X)
+            # Load the complete pipeline
+            pipeline = joblib.load(model_path)
+            logger.info(f"Loaded complete pipeline for {model_name}")
+            
+            # Prepare features (remove label if present)
+            if "label" in df.columns:
+                X = df.drop(columns=["label"])
+                y_true = df["label"]
+                has_labels = True
+            else:
+                X = df.copy()
+                y_true = None
+                has_labels = False
+            
+            # Make predictions (pipeline handles preprocessing automatically)
+            logger.info("Making predictions...")
+            
+            # Get raw predictions
+            y_pred_raw = pipeline.predict(X)
+            
+            # Handle different model types
+            model_info = self.ml_manager.get_model_info(model_name)
+            model_type = model_info.get("performance", {}).get("model_type", "supervised")
+            
+            if model_type == "anomaly_detection":
+                # Convert -1 (outlier) to 1 (Attack), 1 (normal) to 0 (Normal)
+                y_pred = np.where(y_pred_raw == -1, 1, 0)
+            else:
+                # Supervised learning - predictions are already in correct format
+                y_pred = y_pred_raw
             
             # Get probabilities if available
             probabilities = None
             confidence_scores = None
             
             try:
-                if hasattr(model, 'predict_proba'):
-                    probabilities = model.predict_proba(X)
+                if hasattr(pipeline, 'predict_proba'):
+                    probabilities = pipeline.predict_proba(X)
                     # Calculate confidence scores (max probability)
                     confidence_scores = np.max(probabilities, axis=1).tolist()
                     probabilities = probabilities.tolist()
+                elif model_type == "anomaly_detection":
+                    # For anomaly detection, use decision function as pseudo-probabilities
+                    if hasattr(pipeline, 'decision_function'):
+                        scores = pipeline.decision_function(X)
+                        # Normalize scores to [0, 1] range
+                        normalized_scores = (scores - scores.min()) / (scores.max() - scores.min())
+                        # Create probability-like scores
+                        prob_anomaly = 1 - normalized_scores  # Higher score = more likely to be anomaly
+                        probabilities = [[1-p, p] for p in prob_anomaly]
+                        confidence_scores = [max(p) for p in probabilities]
             except Exception as e:
-                logger.warning(f"Could not get probabilities for {model_type}: {e}")
+                logger.warning(f"Could not get probabilities for {model_name}: {e}")
             
             # Convert predictions to human-readable labels
-            prediction_labels = ["Normal" if pred == 0 else "Attack" for pred in predictions]
+            prediction_labels = ["Normal" if pred == 0 else "Attack" for pred in y_pred]
             
-            result = {
-                "predictions": predictions.tolist(),
+            # Basic results
+            results = {
+                "model_name": model_name,
+                "predictions": y_pred.tolist(),
                 "prediction_labels": prediction_labels,
-                "model_type": model_type,
-                "total_samples": len(predictions),
-                "attacks_detected": int(np.sum(predictions)),
-                "normal_traffic": int(len(predictions) - np.sum(predictions))
+                "total_samples": len(y_pred),
+                "attacks_detected": int(np.sum(y_pred)),
+                "normal_traffic": int(len(y_pred) - np.sum(y_pred)),
+                "attack_percentage": round((np.sum(y_pred) / len(y_pred)) * 100, 2)
             }
             
+            # Add probabilities if available
             if probabilities is not None:
-                result["probabilities"] = probabilities
+                results["probabilities"] = probabilities
             if confidence_scores is not None:
-                result["confidence_scores"] = confidence_scores
+                results["confidence_scores"] = confidence_scores
             
-            logger.info(f"Predictions completed using {model_type}: {result['attacks_detected']} attacks detected out of {result['total_samples']} samples")
+            # Calculate performance metrics if true labels are available
+            if has_labels and y_true is not None:
+                accuracy = accuracy_score(y_true, y_pred)
+                precision, recall, f1, _ = precision_recall_fscore_support(y_true, y_pred, average='weighted', zero_division=0)
+                
+                performance = {
+                    "accuracy": round(float(accuracy), 4),
+                    "precision": round(float(precision), 4),
+                    "recall": round(float(recall), 4),
+                    "f1_score": round(float(f1), 4),
+                    "confusion_matrix": confusion_matrix(y_true, y_pred).tolist(),
+                    "classification_report": classification_report(y_true, y_pred, output_dict=True)
+                }
+                
+                results["performance"] = performance
+                logger.info(f"Test performance - Accuracy: {accuracy:.4f}, F1: {f1:.4f}")
             
-            return result
+            logger.info(f"Predictions completed: {results['attacks_detected']} attacks detected out of {results['total_samples']} samples")
+            
+            return results
             
         except Exception as e:
-            logger.error(f"Error making predictions with {model_type}: {e}")
+            logger.error(f"Error making predictions with {model_name}: {e}")
             raise
+    
+    def test_model(self, df: pd.DataFrame, model_name: str) -> Dict[str, Any]:
+        """
+        Test a model and return performance metrics
+        This method expects the dataframe to have a 'label' column for evaluation
+        """
+        try:
+            if "label" not in df.columns:
+                raise ValueError("Dataset must contain a 'label' column for testing")
+            
+            results = self.predict_with_pipeline(df, model_name)
+            
+            if "performance" not in results:
+                raise ValueError("Could not calculate performance metrics - missing true labels")
+            
+            # Add risk assessment
+            attack_percentage = results["attack_percentage"]
+            risk_level = self._assess_risk_level(attack_percentage)
+            results["risk_assessment"] = {
+                "risk_level": risk_level,
+                "attack_percentage": attack_percentage
+            }
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Error testing model {model_name}: {e}")
+            raise
+
+    def _assess_risk_level(self, attack_percentage: float) -> str:
+        """Assess risk level based on attack percentage"""
+        if attack_percentage >= 50:
+            return "Critical"
+        elif attack_percentage >= 25:
+            return "High"
+        elif attack_percentage >= 10:
+            return "Medium"
+        elif attack_percentage >= 5:
+            return "Low"
+        else:
+            return "Minimal"
     
     def predict_batch(self, X: pd.DataFrame, model_type: str = "random_forest") -> Dict[str, Any]:
         """Make batch predictions and return detailed results"""

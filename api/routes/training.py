@@ -1,13 +1,15 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Form
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Form, File, UploadFile
 from pydantic import BaseModel
 from typing import List, Optional, Dict, Any
 import logging
 import threading
 import time
+import pandas as pd
 from datetime import datetime
 from models.model_trainer import ModelTrainer
 from models.data_processor import DataProcessor
 from utils.response_formatter import ResponseFormatter
+from utils.file_handler import FileHandler
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["training"])
@@ -16,6 +18,7 @@ router = APIRouter(prefix="/api/v1", tags=["training"])
 model_trainer = ModelTrainer()
 data_processor = DataProcessor()
 response_formatter = ResponseFormatter()
+file_handler = FileHandler()
 
 # Global dictionary for training status tracking (thread-safe)
 training_jobs = {}
@@ -27,6 +30,74 @@ class TrainingRequest(BaseModel):
     test_size: float = 0.2
     random_state: int = 42
     outlier_method: str = "iqr_cap"
+
+class SimpleTrainingRequest(BaseModel):
+    model_name: str
+    test_size: float = 0.2
+
+@router.post("/models/train")
+async def train_model_simple(model_name: str = Form(...), file: UploadFile = File(...), test_size: float = Form(0.2)):
+    """
+    Train a single model with integrated preprocessing pipeline
+    This is the new simplified training endpoint
+    """
+    try:
+        # Validate model name
+        valid_models = ["random_forest", "isolation_forest", "one_class_svm"]
+        if model_name not in valid_models:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid model name: {model_name}. Valid options: {valid_models}"
+            )
+        
+        # Save uploaded file
+        file_path = file_handler.save_uploaded_file(file, "datasets")
+        
+        # Load dataset
+        logger.info(f"Loading dataset from {file_path}")
+        df = pd.read_csv(file_path)
+        
+        # Check for required column
+        if "label" not in df.columns:
+            # Try common variations
+            if "Label" in df.columns:
+                df = df.rename(columns={"Label": "label"})
+            elif "Class" in df.columns:
+                df = df.rename(columns={"Class": "label"})
+                # Map class labels if needed
+                if df['label'].dtype == 'object':
+                    df['label'] = df['label'].map({'Normal': 0, 'Attack': 1})
+            else:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Dataset must contain a 'label' column (or 'Label'/'Class' column that can be mapped to labels)"
+                )
+        
+        # Train model with integrated pipeline
+        logger.info(f"Starting training for {model_name} with {len(df)} samples")
+        result = model_trainer.train_and_save_model(df, model_name, test_size)
+        
+        logger.info(f"Training completed for {model_name}")
+        
+        return {
+            "success": True,
+            "message": f"Model {model_name} trained and saved successfully",
+            "model_name": model_name,
+            "model_path": result["model_path"],
+            "performance": result["performance"],
+            "training_info": {
+                "training_samples": result["training_samples"],
+                "test_samples": result["test_samples"],
+                "total_samples": len(df),
+                "test_size": test_size
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error training model {model_name}: {e}")
+        raise HTTPException(status_code=500, detail=f"Training failed: {str(e)}")
 
 def update_job_status(task_id: str, **updates):
     """Thread-safe job status update"""

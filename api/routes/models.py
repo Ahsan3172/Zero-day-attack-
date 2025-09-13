@@ -1,9 +1,12 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
 from typing import List, Optional, Dict, Any
 import logging
+import os
+from pathlib import Path
 from models.ml_pipeline import MLPipelineManager
 from models.predictor import NetworkPredictor
 from utils.response_formatter import ResponseFormatter
+from config import Config
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["models"])
@@ -12,6 +15,45 @@ router = APIRouter(prefix="/api/v1", tags=["models"])
 ml_manager = MLPipelineManager()
 predictor = NetworkPredictor()
 response_formatter = ResponseFormatter()
+
+# Use config-based models directory with proper path resolution
+MODELS_DIR = Config.MODELS_DIR
+
+@router.get("/models/available")
+async def get_available_models():
+    """Get list of available trained models for testing"""
+    try:
+        # Resolve the models directory path relative to the api directory
+        api_dir = Path(__file__).parent.parent  # Go up to api directory
+        models_path = api_dir / MODELS_DIR
+        
+        logger.info(f"Looking for models in: {models_path.absolute()}")
+        
+        if not models_path.exists():
+            logger.warning(f"Models directory not found at: {models_path.absolute()}")
+            return {"models": [], "message": f"No models directory found at {models_path}"}
+        
+        # Get all .pkl files in the models directory
+        model_files = list(models_path.glob("*.pkl"))
+        models = [f.stem for f in model_files if f.stem != "models_metadata"]
+        
+        logger.info(f"Found {len(models)} available models: {models}")
+        
+        return {
+            "success": True,
+            "models": models,
+            "total": len(models),
+            "message": f"Found {len(models)} available models",
+            "models_path": str(models_path.absolute())
+        }
+        
+    except Exception as e:
+        logger.error(f"Error getting available models: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+            "models": []
+        }
 
 @router.get("/models")
 async def list_models():
