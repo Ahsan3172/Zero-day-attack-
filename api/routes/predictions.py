@@ -6,10 +6,12 @@ import numpy as np
 import json
 import logging
 import os
+import time
 from pathlib import Path
 from models.predictor import NetworkPredictor
 from utils.file_handler import FileHandler
 from utils.response_formatter import ResponseFormatter
+from utils.database import db
 from config import Config
 
 logger = logging.getLogger(__name__)
@@ -21,11 +23,13 @@ file_handler = FileHandler()
 response_formatter = ResponseFormatter()
 
 @router.post("/models/test")
-async def test_model(model_name: str = Form(...), file: UploadFile = File(...)):
+async def test_model(model_name: str = Form(...), file: UploadFile = File(...), user_id: int = Form(1)):
     """
     Test a trained model with automatic data cleaning for raw datasets
     This endpoint handles raw data cleaning before applying the trained pipeline
     """
+    start_time = time.time()
+    
     try:
         # Save and load the uploaded file
         file_path = await file_handler.save_uploaded_file(file)
@@ -369,6 +373,32 @@ async def test_model(model_name: str = Form(...), file: UploadFile = File(...)):
         logger.info(f"  F1 Score: {float(f1):.4f}")
         logger.info(f"  Attacks detected: {int(np.sum(y_pred))}")
         
+        # Calculate execution time
+        execution_time = time.time() - start_time
+        
+        # Save results to database
+        try:
+            dataset_rows = len(X) if X is not None else 0
+            dataset_cols = X.shape[1] if X is not None else 0
+            
+            result_id = db.save_model_result(
+                model_name=model_name,
+                dataset_filename=file.filename,
+                user_id=user_id,
+                results=results,
+                execution_time=execution_time
+            )
+            
+            if result_id:
+                logger.info(f"Test results saved to database with ID: {result_id}")
+                results["result_id"] = result_id
+            else:
+                logger.warning("Failed to save results to database")
+                
+        except Exception as db_error:
+            logger.error(f"Database error while saving results: {db_error}")
+            # Don't fail the entire request if database save fails
+        
         return results
         
     except HTTPException:
@@ -384,6 +414,34 @@ async def test_model(model_name: str = Form(...), file: UploadFile = File(...)):
                 "error": str(e),
                 "error_type": type(e).__name__,
                 "message": "Testing failed - check server logs for details"
+            }
+        )
+
+@router.get("/models/history/{user_id}")
+async def get_test_history(user_id: int, limit: int = 50):
+    """
+    Get model testing history for a user
+    """
+    try:
+        logger.info(f"Fetching test history for user {user_id}")
+        
+        history = db.get_user_test_history(user_id, limit)
+        
+        logger.info(f"Retrieved {len(history)} test results for user {user_id}")
+        
+        return {
+            "success": True,
+            "history": history,
+            "count": len(history)
+        }
+        
+    except Exception as e:
+        logger.error(f"Error fetching test history: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "error": str(e),
+                "message": "Failed to fetch test history"
             }
         )
 

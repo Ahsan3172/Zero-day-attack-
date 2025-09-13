@@ -996,3 +996,236 @@ ValueError: Mix of label input types (string and number)
 2025-09-13 12:21:24,381 - routes.predictions - INFO -   Accuracy: 0.9886
 2025-09-13 12:21:24,382 - routes.predictions - INFO -   F1 Score: 0.9886
 2025-09-13 12:21:24,382 - routes.predictions - INFO -   Attacks detected: 155760
+2025-09-13 13:42:51,970 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 13:42:51,970 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 13:59:51,968 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 13:59:51,970 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:00:04,651 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:00:04,651 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:00:14,951 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:00:14,975 - utils.database - INFO - Connected to MySQL database successfully
+2025-09-13 14:00:14,978 - routes.predictions - INFO - Retrieved 0 test results for user 1
+2025-09-13 14:00:14,978 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:00:14,978 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:00:26,646 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:00:26,646 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:00:26,646 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:00:26,656 - routes.predictions - INFO - Retrieved 0 test results for user 1
+2025-09-13 14:05:43,966 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:05:43,968 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:05:43,971 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:05:43,971 - routes.predictions - INFO - Retrieved 0 test results for user 1
+2025-09-13 14:07:04,237 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:07:04,239 - routes.predictions - INFO - Retrieved 0 test results for user 1
+2025-09-13 14:07:04,239 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:07:04,241 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:07:32,372 - utils.file_handler - INFO - File saved: uploads\20250913_140732_unswnb15_dataset.csv
+2025-09-13 14:07:32,372 - routes.predictions - INFO - Loading test dataset from uploads\20250913_140732_unswnb15_dataset.csv
+2025-09-13 14:07:33,971 - routes.predictions - INFO - Dataset loaded with shape: (257673, 46)
+2025-09-13 14:07:34,088 - routes.predictions - INFO - Original label distribution: {'Normal': 93000, 'Generic': 58871, 'Exploits': 44525, 'Fuzzers': 24246, 'DoS': 16353, 'Reconnaissance': 13987, 'Analysis': 2677, 'Backdoor': 2329, 'Shellcode': 1511, 'Worms': 174}
+2025-09-13 14:07:34,138 - routes.predictions - WARNING - Found unmapped labels: [nan]
+2025-09-13 14:07:34,155 - routes.predictions - INFO - Final label distribution: {1: 164673, 0: 93000}
+2025-09-13 14:07:34,222 - routes.predictions - INFO - Starting data cleaning for raw dataset...
+2025-09-13 14:07:34,222 - routes.predictions - INFO - Cleaning missing values and placeholders...
+2025-09-13 14:07:35,169 - routes.predictions - INFO - Applying balanced outlier removal...
+2025-09-13 14:07:35,328 - routes.predictions - INFO - Column 'Unnamed: 0': 0 outliers (0.0%)
+2025-09-13 14:07:35,329 - routes.predictions - INFO - Column 'Unnamed: 0' has too few outliers (0.0%) - skipping
+2025-09-13 14:07:35,350 - routes.predictions - INFO - Column 'id': 0 outliers (0.0%)
+2025-09-13 14:07:35,351 - routes.predictions - INFO - Column 'id' has too few outliers (0.0%) - skipping
+2025-09-13 14:07:35,388 - routes.predictions - INFO - Column 'dur': 21597 outliers (8.4%)
+2025-09-13 14:07:35,421 - routes.predictions - INFO - Column 'spkts': 34871 outliers (13.5%)
+2025-09-13 14:07:35,448 - routes.predictions - INFO - Column 'dpkts': 29737 outliers (11.5%)
+2025-09-13 14:07:35,484 - routes.predictions - INFO - Column 'sbytes': 32164 outliers (12.5%)
+2025-09-13 14:07:35,518 - routes.predictions - INFO - Column 'dbytes': 40024 outliers (15.5%)
+2025-09-13 14:07:35,519 - routes.predictions - INFO - Column 'dbytes' has too many outliers (15.5%) - likely normal variation
+2025-09-13 14:07:35,548 - routes.predictions - INFO - Column 'rate': 23541 outliers (9.1%)
+2025-09-13 14:07:35,569 - routes.predictions - INFO - Column 'sttl': 0 outliers (0.0%)
+2025-09-13 14:07:35,569 - routes.predictions - INFO - Column 'sttl' has too few outliers (0.0%) - skipping
+2025-09-13 14:07:35,587 - routes.predictions - INFO - Column 'dttl': 0 outliers (0.0%)
+2025-09-13 14:07:35,587 - routes.predictions - INFO - Column 'dttl' has too few outliers (0.0%) - skipping
+2025-09-13 14:07:35,624 - routes.predictions - INFO - Column 'sload': 22034 outliers (8.6%)
+2025-09-13 14:07:35,653 - routes.predictions - INFO - Column 'dload': 57556 outliers (22.3%)
+2025-09-13 14:07:35,653 - routes.predictions - INFO - Column 'dload' has too many outliers (22.3%) - likely normal variation
+2025-09-13 14:07:35,671 - routes.predictions - INFO - Column 'sloss': 16966 outliers (6.6%)
+2025-09-13 14:07:35,712 - routes.predictions - INFO - Column 'dloss': 39660 outliers (15.4%)
+2025-09-13 14:07:35,713 - routes.predictions - INFO - Column 'dloss' has too many outliers (15.4%) - likely normal variation
+2025-09-13 14:07:35,741 - routes.predictions - INFO - Column 'sinpkt': 20319 outliers (7.9%)
+2025-09-13 14:07:35,770 - routes.predictions - INFO - Column 'dinpkt': 17588 outliers (6.8%)
+2025-09-13 14:07:35,821 - routes.predictions - INFO - Column 'sjit': 23533 outliers (9.1%)
+2025-09-13 14:07:35,857 - routes.predictions - INFO - Column 'djit': 29010 outliers (11.3%)
+2025-09-13 14:07:35,883 - routes.predictions - INFO - Column 'swin': 0 outliers (0.0%)
+2025-09-13 14:07:35,883 - routes.predictions - INFO - Column 'swin' has too few outliers (0.0%) - skipping
+2025-09-13 14:07:35,909 - routes.predictions - INFO - Column 'stcpb': 0 outliers (0.0%)
+2025-09-13 14:07:35,909 - routes.predictions - INFO - Column 'stcpb' has too few outliers (0.0%) - skipping
+2025-09-13 14:07:35,936 - routes.predictions - INFO - Column 'dtcpb': 0 outliers (0.0%)
+2025-09-13 14:07:35,936 - routes.predictions - INFO - Column 'dtcpb' has too few outliers (0.0%) - skipping
+2025-09-13 14:07:35,959 - routes.predictions - INFO - Column 'dwin': 0 outliers (0.0%)
+2025-09-13 14:07:35,959 - routes.predictions - INFO - Column 'dwin' has too few outliers (0.0%) - skipping
+2025-09-13 14:07:35,986 - routes.predictions - INFO - Column 'tcprtt': 12442 outliers (4.8%)
+2025-09-13 14:07:36,020 - routes.predictions - INFO - Column 'synack': 21327 outliers (8.3%)
+2025-09-13 14:07:36,055 - routes.predictions - INFO - Column 'ackdat': 8557 outliers (3.3%)
+2025-09-13 14:07:36,093 - routes.predictions - INFO - Column 'smean': 32653 outliers (12.7%)
+2025-09-13 14:07:36,124 - routes.predictions - INFO - Column 'dmean': 33189 outliers (12.9%)
+2025-09-13 14:07:36,144 - routes.predictions - INFO - Skipping column 'trans_depth' - zero variance
+2025-09-13 14:07:36,154 - routes.predictions - INFO - Skipping column 'response_body_len' - zero variance
+2025-09-13 14:07:36,177 - routes.predictions - INFO - Column 'ct_srv_src': 28068 outliers (10.9%)
+2025-09-13 14:07:36,204 - routes.predictions - INFO - Column 'ct_state_ttl': 3763 outliers (1.5%)
+2025-09-13 14:07:36,234 - routes.predictions - INFO - Column 'ct_dst_ltm': 42388 outliers (16.5%)
+2025-09-13 14:07:36,236 - routes.predictions - INFO - Column 'ct_dst_ltm' has too many outliers (16.5%) - likely normal variation
+2025-09-13 14:07:36,253 - routes.predictions - INFO - Column 'ct_src_dport_ltm': 49014 outliers (19.0%)
+2025-09-13 14:07:36,253 - routes.predictions - INFO - Column 'ct_src_dport_ltm' has too many outliers (19.0%) - likely normal variation
+2025-09-13 14:07:36,269 - routes.predictions - INFO - Column 'ct_dst_sport_ltm': 48244 outliers (18.7%)
+2025-09-13 14:07:36,269 - routes.predictions - INFO - Column 'ct_dst_sport_ltm' has too many outliers (18.7%) - likely normal variation
+2025-09-13 14:07:36,286 - routes.predictions - INFO - Column 'ct_dst_src_ltm': 43419 outliers (16.9%)
+2025-09-13 14:07:36,286 - routes.predictions - INFO - Column 'ct_dst_src_ltm' has too many outliers (16.9%) - likely normal variation
+2025-09-13 14:07:36,286 - routes.predictions - INFO - Skipping column 'is_ftp_login' - only 4 unique values
+2025-09-13 14:07:36,308 - routes.predictions - INFO - Skipping column 'ct_ftp_cmd' - only 4 unique values
+2025-09-13 14:07:36,312 - routes.predictions - INFO - Skipping column 'ct_flw_http_mthd' - zero variance
+2025-09-13 14:07:36,338 - routes.predictions - INFO - Column 'ct_src_ltm': 28194 outliers (10.9%)
+2025-09-13 14:07:36,367 - routes.predictions - INFO - Column 'ct_srv_dst': 34048 outliers (13.2%)
+2025-09-13 14:07:36,382 - routes.predictions - INFO - Skipping column 'is_sm_ips_ports' - only 2 unique values
+2025-09-13 14:07:36,382 - routes.predictions - INFO - Processed 20 columns for outlier detection
+2025-09-13 14:07:36,387 - routes.predictions - INFO - Outlier threshold: 6 columns
+2025-09-13 14:07:36,387 - routes.predictions - INFO - Rows marked for removal: 13912 (outliers in 6+ columns)
+2025-09-13 14:07:36,688 - routes.predictions - INFO - Data cleaning completed:
+2025-09-13 14:07:36,688 - routes.predictions - INFO -   Original shape: (257673, 45)
+2025-09-13 14:07:36,688 - routes.predictions - INFO -   Cleaned shape: (243761, 45)
+2025-09-13 14:07:36,688 - routes.predictions - INFO -   Outliers removed: 13912 (5.4%)
+2025-09-13 14:07:36,688 - routes.predictions - INFO -   Data retained: 243761 (94.6%)
+2025-09-13 14:07:36,688 - routes.predictions - INFO - Applying feature engineering...
+2025-09-13 14:07:50,032 - routes.predictions - INFO - Feature engineering completed. New shape: (243761, 53)
+2025-09-13 14:07:50,032 - routes.predictions - INFO - Added features: pkt_rate_ratio, byte_transfer_ratio, total_pkts, total_bytes, pkt_size_mean, dur_*_interaction
+2025-09-13 14:07:50,032 - routes.predictions - INFO - Looking for model at: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models\random_forest.pkl
+2025-09-13 14:07:50,419 - routes.predictions - INFO - Loaded trained pipeline for random_forest from C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models\random_forest.pkl
+2025-09-13 14:07:50,419 - routes.predictions - INFO - Model expects 50 features
+2025-09-13 14:07:50,419 - routes.predictions - INFO - Extra features (will be ignored): {'Class', 'Unnamed: 0', 'id'}
+2025-09-13 14:07:50,419 - routes.predictions - INFO - Making predictions with trained pipeline...
+2025-09-13 14:07:50,430 - routes.predictions - INFO - Input features: ['Unnamed: 0', 'id', 'dur', 'proto', 'service', 'state', 'spkts', 'dpkts', 'sbytes', 'dbytes', 'rate', 'sttl', 'dttl', 'sload', 'dload', 'sloss', 'dloss', 'sinpkt', 'dinpkt', 'sjit', 'djit', 'swin', 'stcpb', 'dtcpb', 'dwin', 'tcprtt', 'synack', 'ackdat', 'smean', 'dmean', 'trans_depth', 'response_body_len', 'ct_srv_src', 'ct_state_ttl', 'ct_dst_ltm', 'ct_src_dport_ltm', 'ct_dst_sport_ltm', 'ct_dst_src_ltm', 'is_ftp_login', 'ct_ftp_cmd', 'ct_flw_http_mthd', 'ct_src_ltm', 'ct_srv_dst', 'is_sm_ips_ports', 'Class', 'pkt_rate_ratio', 'byte_transfer_ratio', 'total_pkts', 'total_bytes', 'pkt_size_mean', 'dur_rate_interaction', 'dur_sload_interaction', 'dur_dload_interaction']
+2025-09-13 14:07:53,315 - routes.predictions - INFO - y data type: int64, unique values: [0 1]
+2025-09-13 14:07:53,318 - routes.predictions - INFO - y_pred data type: int64, unique values: [0 1]
+2025-09-13 14:07:56,649 - routes.predictions - INFO - Model testing completed successfully:
+2025-09-13 14:07:56,649 - routes.predictions - INFO -   Accuracy: 0.9886
+2025-09-13 14:07:56,649 - routes.predictions - INFO -   F1 Score: 0.9886
+2025-09-13 14:07:56,662 - routes.predictions - INFO -   Attacks detected: 155760
+2025-09-13 14:07:56,678 - routes.predictions - INFO - Test results saved to database with ID: 1
+2025-09-13 14:07:56,757 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:07:56,763 - routes.predictions - INFO - Retrieved 1 test results for user 1
+2025-09-13 14:08:35,590 - utils.file_handler - INFO - File saved: uploads\20250913_140835_unswnb15_dataset.csv
+2025-09-13 14:08:35,590 - routes.predictions - INFO - Loading test dataset from uploads\20250913_140835_unswnb15_dataset.csv
+2025-09-13 14:08:37,157 - routes.predictions - INFO - Dataset loaded with shape: (257673, 46)
+2025-09-13 14:08:37,252 - routes.predictions - INFO - Original label distribution: {'Normal': 93000, 'Generic': 58871, 'Exploits': 44525, 'Fuzzers': 24246, 'DoS': 16353, 'Reconnaissance': 13987, 'Analysis': 2677, 'Backdoor': 2329, 'Shellcode': 1511, 'Worms': 174}
+2025-09-13 14:08:37,270 - routes.predictions - WARNING - Found unmapped labels: [nan]
+2025-09-13 14:08:37,289 - routes.predictions - INFO - Final label distribution: {1: 164673, 0: 93000}
+2025-09-13 14:08:37,338 - routes.predictions - INFO - Starting data cleaning for raw dataset...
+2025-09-13 14:08:37,338 - routes.predictions - INFO - Cleaning missing values and placeholders...
+2025-09-13 14:08:38,254 - routes.predictions - INFO - Applying balanced outlier removal...
+2025-09-13 14:08:38,414 - routes.predictions - INFO - Column 'Unnamed: 0': 0 outliers (0.0%)
+2025-09-13 14:08:38,414 - routes.predictions - INFO - Column 'Unnamed: 0' has too few outliers (0.0%) - skipping
+2025-09-13 14:08:38,445 - routes.predictions - INFO - Column 'id': 0 outliers (0.0%)
+2025-09-13 14:08:38,447 - routes.predictions - INFO - Column 'id' has too few outliers (0.0%) - skipping
+2025-09-13 14:08:38,478 - routes.predictions - INFO - Column 'dur': 21597 outliers (8.4%)
+2025-09-13 14:08:38,513 - routes.predictions - INFO - Column 'spkts': 34871 outliers (13.5%)
+2025-09-13 14:08:38,537 - routes.predictions - INFO - Column 'dpkts': 29737 outliers (11.5%)
+2025-09-13 14:08:38,564 - routes.predictions - INFO - Column 'sbytes': 32164 outliers (12.5%)
+2025-09-13 14:08:38,593 - routes.predictions - INFO - Column 'dbytes': 40024 outliers (15.5%)
+2025-09-13 14:08:38,593 - routes.predictions - INFO - Column 'dbytes' has too many outliers (15.5%) - likely normal variation
+2025-09-13 14:08:38,622 - routes.predictions - INFO - Column 'rate': 23541 outliers (9.1%)
+2025-09-13 14:08:38,640 - routes.predictions - INFO - Column 'sttl': 0 outliers (0.0%)
+2025-09-13 14:08:38,640 - routes.predictions - INFO - Column 'sttl' has too few outliers (0.0%) - skipping
+2025-09-13 14:08:38,670 - routes.predictions - INFO - Column 'dttl': 0 outliers (0.0%)
+2025-09-13 14:08:38,671 - routes.predictions - INFO - Column 'dttl' has too few outliers (0.0%) - skipping
+2025-09-13 14:08:38,708 - routes.predictions - INFO - Column 'sload': 22034 outliers (8.6%)
+2025-09-13 14:08:38,740 - routes.predictions - INFO - Column 'dload': 57556 outliers (22.3%)
+2025-09-13 14:08:38,740 - routes.predictions - INFO - Column 'dload' has too many outliers (22.3%) - likely normal variation
+2025-09-13 14:08:38,753 - routes.predictions - INFO - Column 'sloss': 16966 outliers (6.6%)
+2025-09-13 14:08:38,788 - routes.predictions - INFO - Column 'dloss': 39660 outliers (15.4%)
+2025-09-13 14:08:38,788 - routes.predictions - INFO - Column 'dloss' has too many outliers (15.4%) - likely normal variation
+2025-09-13 14:08:38,826 - routes.predictions - INFO - Column 'sinpkt': 20319 outliers (7.9%)
+2025-09-13 14:08:38,860 - routes.predictions - INFO - Column 'dinpkt': 17588 outliers (6.8%)
+2025-09-13 14:08:38,903 - routes.predictions - INFO - Column 'sjit': 23533 outliers (9.1%)
+2025-09-13 14:08:38,939 - routes.predictions - INFO - Column 'djit': 29010 outliers (11.3%)
+2025-09-13 14:08:38,958 - routes.predictions - INFO - Column 'swin': 0 outliers (0.0%)
+2025-09-13 14:08:38,958 - routes.predictions - INFO - Column 'swin' has too few outliers (0.0%) - skipping
+2025-09-13 14:08:38,990 - routes.predictions - INFO - Column 'stcpb': 0 outliers (0.0%)
+2025-09-13 14:08:38,991 - routes.predictions - INFO - Column 'stcpb' has too few outliers (0.0%) - skipping
+2025-09-13 14:08:39,011 - routes.predictions - INFO - Column 'dtcpb': 0 outliers (0.0%)
+2025-09-13 14:08:39,011 - routes.predictions - INFO - Column 'dtcpb' has too few outliers (0.0%) - skipping
+2025-09-13 14:08:39,027 - routes.predictions - INFO - Column 'dwin': 0 outliers (0.0%)
+2025-09-13 14:08:39,027 - routes.predictions - INFO - Column 'dwin' has too few outliers (0.0%) - skipping
+2025-09-13 14:08:39,056 - routes.predictions - INFO - Column 'tcprtt': 12442 outliers (4.8%)
+2025-09-13 14:08:39,091 - routes.predictions - INFO - Column 'synack': 21327 outliers (8.3%)
+2025-09-13 14:08:39,124 - routes.predictions - INFO - Column 'ackdat': 8557 outliers (3.3%)
+2025-09-13 14:08:39,154 - routes.predictions - INFO - Column 'smean': 32653 outliers (12.7%)
+2025-09-13 14:08:39,187 - routes.predictions - INFO - Column 'dmean': 33189 outliers (12.9%)
+2025-09-13 14:08:39,208 - routes.predictions - INFO - Skipping column 'trans_depth' - zero variance
+2025-09-13 14:08:39,225 - routes.predictions - INFO - Skipping column 'response_body_len' - zero variance
+2025-09-13 14:08:39,235 - routes.predictions - INFO - Column 'ct_srv_src': 28068 outliers (10.9%)
+2025-09-13 14:08:39,265 - routes.predictions - INFO - Column 'ct_state_ttl': 3763 outliers (1.5%)
+2025-09-13 14:08:39,291 - routes.predictions - INFO - Column 'ct_dst_ltm': 42388 outliers (16.5%)
+2025-09-13 14:08:39,291 - routes.predictions - INFO - Column 'ct_dst_ltm' has too many outliers (16.5%) - likely normal variation
+2025-09-13 14:08:39,311 - routes.predictions - INFO - Column 'ct_src_dport_ltm': 49014 outliers (19.0%)
+2025-09-13 14:08:39,311 - routes.predictions - INFO - Column 'ct_src_dport_ltm' has too many outliers (19.0%) - likely normal variation
+2025-09-13 14:08:39,329 - routes.predictions - INFO - Column 'ct_dst_sport_ltm': 48244 outliers (18.7%)
+2025-09-13 14:08:39,330 - routes.predictions - INFO - Column 'ct_dst_sport_ltm' has too many outliers (18.7%) - likely normal variation
+2025-09-13 14:08:39,348 - routes.predictions - INFO - Column 'ct_dst_src_ltm': 43419 outliers (16.9%)
+2025-09-13 14:08:39,348 - routes.predictions - INFO - Column 'ct_dst_src_ltm' has too many outliers (16.9%) - likely normal variation
+2025-09-13 14:08:39,356 - routes.predictions - INFO - Skipping column 'is_ftp_login' - only 4 unique values
+2025-09-13 14:08:39,363 - routes.predictions - INFO - Skipping column 'ct_ftp_cmd' - only 4 unique values
+2025-09-13 14:08:39,377 - routes.predictions - INFO - Skipping column 'ct_flw_http_mthd' - zero variance
+2025-09-13 14:08:39,386 - routes.predictions - INFO - Column 'ct_src_ltm': 28194 outliers (10.9%)
+2025-09-13 14:08:39,418 - routes.predictions - INFO - Column 'ct_srv_dst': 34048 outliers (13.2%)
+2025-09-13 14:08:39,435 - routes.predictions - INFO - Skipping column 'is_sm_ips_ports' - only 2 unique values
+2025-09-13 14:08:39,435 - routes.predictions - INFO - Processed 20 columns for outlier detection
+2025-09-13 14:08:39,435 - routes.predictions - INFO - Outlier threshold: 6 columns
+2025-09-13 14:08:39,435 - routes.predictions - INFO - Rows marked for removal: 13912 (outliers in 6+ columns)
+2025-09-13 14:08:39,692 - routes.predictions - INFO - Data cleaning completed:
+2025-09-13 14:08:39,692 - routes.predictions - INFO -   Original shape: (257673, 45)
+2025-09-13 14:08:39,692 - routes.predictions - INFO -   Cleaned shape: (243761, 45)
+2025-09-13 14:08:39,693 - routes.predictions - INFO -   Outliers removed: 13912 (5.4%)
+2025-09-13 14:08:39,693 - routes.predictions - INFO -   Data retained: 243761 (94.6%)
+2025-09-13 14:08:39,693 - routes.predictions - INFO - Applying feature engineering...
+2025-09-13 14:08:52,884 - routes.predictions - INFO - Feature engineering completed. New shape: (243761, 53)
+2025-09-13 14:08:52,884 - routes.predictions - INFO - Added features: pkt_rate_ratio, byte_transfer_ratio, total_pkts, total_bytes, pkt_size_mean, dur_*_interaction
+2025-09-13 14:08:52,884 - routes.predictions - INFO - Looking for model at: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models\isolation_forest.pkl
+2025-09-13 14:08:52,961 - routes.predictions - INFO - Loaded trained pipeline for isolation_forest from C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models\isolation_forest.pkl
+2025-09-13 14:08:52,961 - routes.predictions - INFO - Model expects 11 features
+2025-09-13 14:08:52,962 - routes.predictions - INFO - Extra features (will be ignored): {'synack', 'ct_flw_http_mthd', 'response_body_len', 'ct_state_ttl', 'ct_srv_src', 'byte_transfer_ratio', 'dur_rate_interaction', 'swin', 'djit', 'ct_src_dport_ltm', 'sttl', 'ct_dst_src_ltm', 'pkt_size_mean', 'dttl', 'is_ftp_login', 'id', 'ct_ftp_cmd', 'ct_src_ltm', 'sloss', 'sinpkt', 'total_bytes', 'Unnamed: 0', 'dloss', 'dur_sload_interaction', 'tcprtt', 'dinpkt', 'stcpb', 'dur_dload_interaction', 'ct_dst_ltm', 'smean', 'Class', 'trans_depth', 'dtcpb', 'dmean', 'is_sm_ips_ports', 'total_pkts', 'ct_dst_sport_ltm', 'ct_srv_dst', 'pkt_rate_ratio', 'dwin', 'ackdat', 'sjit'}
+2025-09-13 14:08:52,962 - routes.predictions - INFO - Making predictions with trained pipeline...
+2025-09-13 14:08:52,962 - routes.predictions - INFO - Input features: ['Unnamed: 0', 'id', 'dur', 'proto', 'service', 'state', 'spkts', 'dpkts', 'sbytes', 'dbytes', 'rate', 'sttl', 'dttl', 'sload', 'dload', 'sloss', 'dloss', 'sinpkt', 'dinpkt', 'sjit', 'djit', 'swin', 'stcpb', 'dtcpb', 'dwin', 'tcprtt', 'synack', 'ackdat', 'smean', 'dmean', 'trans_depth', 'response_body_len', 'ct_srv_src', 'ct_state_ttl', 'ct_dst_ltm', 'ct_src_dport_ltm', 'ct_dst_sport_ltm', 'ct_dst_src_ltm', 'is_ftp_login', 'ct_ftp_cmd', 'ct_flw_http_mthd', 'ct_src_ltm', 'ct_srv_dst', 'is_sm_ips_ports', 'Class', 'pkt_rate_ratio', 'byte_transfer_ratio', 'total_pkts', 'total_bytes', 'pkt_size_mean', 'dur_rate_interaction', 'dur_sload_interaction', 'dur_dload_interaction']
+2025-09-13 14:08:55,302 - routes.predictions - INFO - y data type: int64, unique values: [0 1]
+2025-09-13 14:08:55,302 - routes.predictions - INFO - y_pred data type: int64, unique values: [1]
+2025-09-13 14:08:55,381 - routes.predictions - INFO - Model testing completed successfully:
+2025-09-13 14:08:55,381 - routes.predictions - INFO -   Accuracy: 0.6399
+2025-09-13 14:08:55,381 - routes.predictions - INFO -   F1 Score: 0.4993
+2025-09-13 14:08:55,381 - routes.predictions - INFO -   Attacks detected: 243761
+2025-09-13 14:08:55,402 - routes.predictions - INFO - Test results saved to database with ID: 2
+2025-09-13 14:08:55,446 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:08:55,448 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:13:25,003 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:13:25,003 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:13:25,017 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:13:25,017 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:14:36,968 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:14:36,968 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:14:36,968 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:14:36,973 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:17:39,971 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:17:39,974 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:17:39,974 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:17:39,976 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:19:44,987 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:19:44,987 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:19:44,987 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:19:44,987 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:21:06,986 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:21:06,989 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:21:06,989 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:21:06,989 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:22:36,962 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:22:36,964 - routes.predictions - INFO - Retrieved 2 test results for user 1
+2025-09-13 14:22:36,967 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:22:36,967 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:24:20,969 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-13 14:24:20,969 - routes.models - INFO - Found 3 available models: ['isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-13 14:24:20,970 - routes.predictions - INFO - Fetching test history for user 1
+2025-09-13 14:24:20,973 - routes.predictions - INFO - Retrieved 2 test results for user 1
