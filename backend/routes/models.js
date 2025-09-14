@@ -18,12 +18,14 @@ router.get('/', async (req, res) => {
     const offset = (page - 1) * limit;
     const status = req.query.status;
 
+    // Get training jobs from database
     let query = `
-      SELECT m.id, m.name, m.description, m.model_type, m.algorithm, 
-             m.accuracy, m.precision_score, m.recall_score, m.f1_score, 
-             m.status, m.created_at, u.username as created_by
+      SELECT m.id, m.task_id, m.user_id, m.model_types, 
+             m.status, m.progress, m.current_model, m.message,
+             m.models_completed, m.created_at, m.updated_at, m.completed_at,
+             u.username as created_by
       FROM ml_models m
-      JOIN users u ON m.created_by = u.id
+      JOIN users u ON m.user_id = u.id
     `;
     let params = [];
 
@@ -35,7 +37,7 @@ router.get('/', async (req, res) => {
     query += ' ORDER BY m.created_at DESC LIMIT ? OFFSET ?';
     params.push(limit, offset);
 
-    const models = await executeQuery(query, params);
+    const trainingJobs = await executeQuery(query, params);
 
     // Get total count
     let countQuery = 'SELECT COUNT(*) as total FROM ml_models';
@@ -47,11 +49,41 @@ router.get('/', async (req, res) => {
     
     const [{ total }] = await executeQuery(countQuery, countParams);
 
+    // Read saved models metadata
+    const savedModelsPath = path.join(__dirname, '../../api/saved_models');
+    const metadataPath = path.join(savedModelsPath, 'models_metadata.json');
+    let savedModels = [];
+    
+    try {
+      if (fs.existsSync(metadataPath)) {
+        const metadataContent = fs.readFileSync(metadataPath, 'utf8');
+        const metadata = JSON.parse(metadataContent);
+        
+        // Transform saved models data
+        savedModels = Object.entries(metadata).map(([modelName, modelData]) => ({
+          id: modelName,
+          name: modelName.charAt(0).toUpperCase() + modelName.slice(1).replace(/_/g, ' '),
+          type: modelName.replace(/_/g, ' ').split(' ').map(word => 
+            word.charAt(0).toUpperCase() + word.slice(1)
+          ).join(' '),
+          accuracy: (modelData.performance?.accuracy * 100).toFixed(1) + '%' || 'N/A',
+          status: fs.existsSync(path.join(savedModelsPath, modelData.path)) ? 'active' : 'inactive',
+          lastTrained: modelData.created_at ? new Date(modelData.created_at).toLocaleDateString() : 'Unknown',
+          description: `${modelName.replace(/_/g, ' ').charAt(0).toUpperCase() + modelName.slice(1).replace(/_/g, ' ')} model for anomaly detection`,
+          performance: modelData.performance || null,
+          path: modelData.path
+        }));
+      }
+    } catch (error) {
+      logger.error('Error reading saved models metadata:', error);
+    }
+
     res.json({
       success: true,
       message: 'Models retrieved successfully',
       data: {
-        models,
+        saved_models: savedModels,
+        training_jobs: trainingJobs,
         pagination: {
           page,
           limit,
