@@ -65,7 +65,7 @@ CREATE TABLE user_sessions (
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
--- Model training jobs
+-- Model ml_models
 CREATE TABLE ml_models (
     id INT PRIMARY KEY AUTO_INCREMENT,
     task_id VARCHAR(100) UNIQUE NOT NULL,
