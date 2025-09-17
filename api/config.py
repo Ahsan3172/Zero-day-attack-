@@ -33,9 +33,11 @@ class Config:
     DEFAULT_MODEL_TYPE = os.getenv("DEFAULT_MODEL_TYPE", "random_forest")
     
     # Dataset Settings
+    # Use relative path from API directory to dataset directory
+    _base_dir = Path(__file__).parent.parent  # Go up from api/ to project root
     DEFAULT_DATASET_PATH = os.getenv(
         "DEFAULT_DATASET_PATH",
-        "c:\\Users\\adnan\\OneDrive\\Documents\\Projects\\Zero_Day_Attack\\dataset\\unswnb15_dataset.csv"
+        str(_base_dir / "dataset" / "unswnb15_dataset.csv")
     )
     
     # Logging Settings
