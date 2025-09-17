@@ -286,7 +286,7 @@ const Reports = () => {
           </div>
 
           <div class="section">
-            <h2>🔍 Test Information</h2>
+            <h2>Test Information</h2>
             <div class="info-row">
               <span class="info-label">Test ID:</span>
               <span>${result.id}</span>
@@ -314,7 +314,7 @@ const Reports = () => {
           </div>
 
           <div class="section">
-            <h2>📊 Performance Metrics</h2>
+            <h2>Performance Metrics</h2>
             <div class="metrics-grid">
               <div class="metric-card">
                 <div class="metric-label">Accuracy</div>
@@ -336,16 +336,16 @@ const Reports = () => {
           </div>
 
           <div class="section">
-            <h2>🎯 Performance Analysis</h2>
+            <h2>Performance Analysis</h2>
             <p><strong>Overall Assessment:</strong></p>
             <p>
               ${accuracy >= 0.95 ? 
-                '🔥 <strong>Excellent Performance</strong> - This model shows outstanding threat detection capabilities with 95%+ accuracy.' :
+                '<strong>Excellent Performance</strong> - This model shows outstanding threat detection capabilities with 95%+ accuracy.' :
                 accuracy >= 0.90 ?
-                '✅ <strong>Very Good Performance</strong> - Strong threat detection with 90-95% accuracy.' :
+                '<strong>Very Good Performance</strong> - Strong threat detection with 90-95% accuracy.' :
                 accuracy >= 0.80 ?
-                '⚠️ <strong>Good Performance</strong> - Acceptable threat detection with 80-90% accuracy.' :
-                '🔴 <strong>Needs Improvement</strong> - Performance below 80% requires optimization.'
+                '<strong>Good Performance</strong> - Acceptable threat detection with 80-90% accuracy.' :
+                '<strong>Needs Improvement</strong> - Performance below 80% requires optimization.'
               }
             </p>
             
@@ -359,7 +359,7 @@ const Reports = () => {
           </div>
 
           <div class="section">
-            <h2>🛡️ Security Implications</h2>
+            <h2>Security Implications</h2>
             <p><strong>Threat Detection Capability:</strong></p>
             <p>
               This model's ${safePercentage(accuracy)}% accuracy means it can correctly identify 
@@ -369,13 +369,13 @@ const Reports = () => {
             <p><strong>Recommendations:</strong></p>
             <ul>
               ${accuracy >= 0.95 ? 
-                '<li>✅ Model is production-ready for critical security systems</li><li>✅ Can be deployed with confidence in enterprise environments</li>' :
+                '<li>Model is production-ready for critical security systems</li><li>Can be deployed with confidence in enterprise environments</li>' :
                 accuracy >= 0.85 ?
-                '<li>⚡ Model shows good potential, consider fine-tuning for production</li><li>🔧 Monitor performance in staging environment</li>' :
-                '<li>🔄 Additional training recommended before production deployment</li><li>📈 Consider feature engineering and data augmentation</li>'
+                '<li>Model shows good potential, consider fine-tuning for production</li><li>Monitor performance in staging environment</li>' :
+                '<li>Additional training recommended before production deployment</li><li>Consider feature engineering and data augmentation</li>'
               }
-              <li>📊 Continue monitoring performance with new threat data</li>
-              <li>🔄 Regular model retraining recommended as threat landscape evolves</li>
+              <li>Continue monitoring performance with new threat data</li>
+              <li>Regular model retraining recommended as threat landscape evolves</li>
             </ul>
           </div>
 
