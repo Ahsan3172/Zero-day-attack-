@@ -724,231 +724,232 @@ const TestModels = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {history.map((item, index) => (
-                <div key={item.id} className="border border-gray-700 rounded-xl overflow-hidden hover:shadow-xl hover:border-gray-600 transition-all duration-200 bg-gray-800">
-                  <button
-                    className="w-full text-left p-5 hover:bg-gray-750 transition-colors flex items-center justify-between group"
-                    onClick={() => setExpandedHistoryId(expandedHistoryId === item.id ? null : item.id)}
+              <div className="flex items-center justify-between bg-gray-800 p-4 rounded-lg border border-gray-700 hover:bg-gray-750 transition-colors">
+                <div className="flex items-center space-x-3">
+                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 text-white font-bold text-sm">
+                    {history.length}
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Latest Test</p>
+                    <h3 className="text-lg font-semibold text-white">
+                      {history[history.length - 1].model_name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    </h3>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-gray-300 border-gray-600 hover:border-gray-500"
+                    onClick={() => setExpandedHistoryId(expandedHistoryId === history[history.length - 1].id ? null : history[history.length - 1].id)}
                   >
-                    <div className="flex-1">
-                      {/* Header Row */}
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <div className="flex items-center justify-center w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg text-white font-bold text-sm">
-                            {index + 1}
-                          </div>
-                          <div>
-                            <h3 className="font-bold text-lg text-white group-hover:text-blue-400 transition-colors">
-                              {item.model_name?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown Model'}
-                            </h3>
-                            <div className="flex items-center space-x-4 text-sm text-gray-400 mt-1">
-                              <div className="flex items-center space-x-1">
-                                <Clock className="h-4 w-4" />
-                                <span className="font-medium">{new Date(item.created_at).toLocaleDateString()}</span>
-                                <span className="text-gray-500">•</span>
-                                <span>{new Date(item.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        <ChevronDown 
-                          className={`h-6 w-6 text-gray-500 group-hover:text-blue-400 transition-all duration-200 ${
-                            expandedHistoryId === item.id ? "rotate-180 text-blue-400" : ""
-                          }`} 
-                        />
-                      </div>
+                    <ChevronDown 
+                      className={`h-4 w-4 transition-transform ${expandedHistoryId === history[history.length - 1].id ? "rotate-180" : ""}`}
+                    />
+                    {expandedHistoryId === history[history.length - 1].id ? 'Collapse' : 'Expand'}
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    size="sm" 
+                    className="flex items-center space-x-2"
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      if (window.confirm("Are you sure you want to delete this test result? This action cannot be undone.")) {
+                        try {
+                          const response = await fetchWithAuth(`http://localhost:5000/api/models/results/${history[history.length - 1].id}`, {
+                            method: "DELETE",
+                          });
+                          
+                          if (response.success) {
+                            toast({
+                              title: "Deleted",
+                              description: "Test result deleted successfully",
+                            });
+                            
+                            // Refresh history
+                            setHistory((prev) => prev.filter((item) => item.id !== history[history.length - 1].id));
+                          } else {
+                            throw new Error(response.message || "Failed to delete test result");
+                          }
+                        } catch (error) {
+                          console.error("Error deleting test result:", error);
+                          toast({
+                            title: "Error",
+                            description: error instanceof Error ? error.message : "An error occurred while deleting",
+                            variant: "destructive"
+                          });
+                        }
+                      }
+                    }}
+                  >
+                    <span>Delete</span>
+                  </Button>
+                </div>
+              </div>
 
-                      {/* Quick Stats Row */}
-                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-                        <div className="bg-blue-900/30 px-3 py-2 rounded-lg border border-blue-800">
-                          <p className="text-xs font-medium text-blue-400 uppercase tracking-wide">Accuracy</p>
-                          <p className="text-lg font-bold text-blue-300">{(item.accuracy * 100).toFixed(1)}%</p>
+              {expandedHistoryId === history[history.length - 1].id && (
+                <div className="bg-gray-850 border-t border-gray-700">
+                  <div className="p-6 space-y-6">
+                    {/* Performance Metrics Grid */}
+                    <div>
+                      <h4 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                        <Activity className="h-5 w-5 text-blue-400" />
+                        <span>Performance Metrics</span>
+                      </h4>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="text-center p-4 bg-gray-800 rounded-xl border border-blue-700 shadow-lg">
+                          <div className="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span className="text-blue-300 font-bold text-lg">{(history[history.length - 1].accuracy * 100).toFixed(0)}%</span>
+                          </div>
+                          <p className="text-xl font-bold text-blue-300">{(history[history.length - 1].accuracy * 100).toFixed(2)}%</p>
+                          <p className="text-sm font-semibold text-gray-300">Accuracy</p>
                         </div>
-                        <div className="bg-green-900/30 px-3 py-2 rounded-lg border border-green-800">
-                          <p className="text-xs font-medium text-green-400 uppercase tracking-wide">F1 Score</p>
-                          <p className="text-lg font-bold text-green-300">{(item.f1_score * 100).toFixed(1)}%</p>
+                        <div className="text-center p-4 bg-gray-800 rounded-xl border border-green-700 shadow-lg">
+                          <div className="w-12 h-12 bg-green-900 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span className="text-green-300 font-bold text-lg">{(history[history.length - 1].precision_score * 100).toFixed(0)}%</span>
+                          </div>
+                          <p className="text-xl font-bold text-green-300">{(history[history.length - 1].precision_score * 100).toFixed(2)}%</p>
+                          <p className="text-sm font-semibold text-gray-300">Precision</p>
                         </div>
-                        <div className="bg-purple-900/30 px-3 py-2 rounded-lg border border-purple-800">
-                          <p className="text-xs font-medium text-purple-400 uppercase tracking-wide">Dataset</p>
-                          <p className="text-sm font-bold text-purple-300 truncate">{item.dataset_filename || 'N/A'}</p>
+                        <div className="text-center p-4 bg-gray-800 rounded-xl border border-yellow-700 shadow-lg">
+                          <div className="w-12 h-12 bg-yellow-900 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span className="text-yellow-300 font-bold text-lg">{(history[history.length - 1].recall_score * 100).toFixed(0)}%</span>
+                          </div>
+                          <p className="text-xl font-bold text-yellow-300">{(history[history.length - 1].recall_score * 100).toFixed(2)}%</p>
+                          <p className="text-sm font-semibold text-gray-300">Recall</p>
                         </div>
-                        <div className="bg-orange-900/30 px-3 py-2 rounded-lg border border-orange-800">
-                          <p className="text-xs font-medium text-orange-400 uppercase tracking-wide">Duration</p>
-                          <p className="text-lg font-bold text-orange-300">{typeof item.execution_time === 'number' ? item.execution_time.toFixed(1) : Number(item.execution_time || 0).toFixed(1)}s</p>
-                        </div>
-                        <div className="bg-gray-700/50 px-3 py-2 rounded-lg border border-gray-600 md:block hidden">
-                          <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Predictions</p>
-                          <p className="text-lg font-bold text-gray-300">{item.prediction_results?.total_predictions || 0}</p>
+                        <div className="text-center p-4 bg-gray-800 rounded-xl border border-purple-700 shadow-lg">
+                          <div className="w-12 h-12 bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-2">
+                            <span className="text-purple-300 font-bold text-lg">{(history[history.length - 1].f1_score * 100).toFixed(0)}%</span>
+                          </div>
+                          <p className="text-xl font-bold text-purple-300">{(history[history.length - 1].f1_score * 100).toFixed(2)}%</p>
+                          <p className="text-sm font-semibold text-gray-300">F1 Score</p>
                         </div>
                       </div>
                     </div>
-                  </button>
-                  
-                  {expandedHistoryId === item.id && (
-                    <div className="bg-gray-850 border-t border-gray-700">
-                      <div className="p-6 space-y-6">
-                        {/* Performance Metrics Grid */}
-                        <div>
+
+                    {/* Detailed Results Grid */}
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                      {/* Confusion Matrix */}
+                      {history[history.length - 1].confusion_matrix && Array.isArray(history[history.length - 1].confusion_matrix) && (
+                        <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg">
                           <h4 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-                            <Activity className="h-5 w-5 text-blue-400" />
-                            <span>Performance Metrics</span>
+                            <BarChart3 className="h-5 w-5 text-indigo-400" />
+                            <span>Confusion Matrix</span>
                           </h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="text-center p-4 bg-gray-800 rounded-xl border border-blue-700 shadow-lg">
-                              <div className="w-12 h-12 bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <span className="text-blue-300 font-bold text-lg">{(item.accuracy * 100).toFixed(0)}%</span>
-                              </div>
-                              <p className="text-xl font-bold text-blue-300">{(item.accuracy * 100).toFixed(2)}%</p>
-                              <p className="text-sm font-semibold text-gray-300">Accuracy</p>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="p-4 bg-gradient-to-br from-green-900/50 to-green-800/50 text-center rounded-lg border border-green-600">
+                              <p className="text-2xl font-bold text-green-300">{history[history.length - 1].confusion_matrix[0]?.[0] || 0}</p>
+                              <p className="text-sm font-semibold text-green-400">True Normal</p>
+                              <p className="text-xs text-green-500 mt-1">Correctly classified as normal</p>
                             </div>
-                            <div className="text-center p-4 bg-gray-800 rounded-xl border border-green-700 shadow-lg">
-                              <div className="w-12 h-12 bg-green-900 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <span className="text-green-300 font-bold text-lg">{(item.precision_score * 100).toFixed(0)}%</span>
-                              </div>
-                              <p className="text-xl font-bold text-green-300">{(item.precision_score * 100).toFixed(2)}%</p>
-                              <p className="text-sm font-semibold text-gray-300">Precision</p>
+                            <div className="p-4 bg-gradient-to-br from-red-900/50 to-red-800/50 text-center rounded-lg border border-red-600">
+                              <p className="text-2xl font-bold text-red-300">{history[history.length - 1].confusion_matrix[0]?.[1] || 0}</p>
+                              <p className="text-sm font-semibold text-red-400">False Positive</p>
+                              <p className="text-xs text-red-500 mt-1">Normal classified as attack</p>
                             </div>
-                            <div className="text-center p-4 bg-gray-800 rounded-xl border border-yellow-700 shadow-lg">
-                              <div className="w-12 h-12 bg-yellow-900 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <span className="text-yellow-300 font-bold text-lg">{(item.recall_score * 100).toFixed(0)}%</span>
-                              </div>
-                              <p className="text-xl font-bold text-yellow-300">{(item.recall_score * 100).toFixed(2)}%</p>
-                              <p className="text-sm font-semibold text-gray-300">Recall</p>
+                            <div className="p-4 bg-gradient-to-br from-orange-900/50 to-orange-800/50 text-center rounded-lg border border-orange-600">
+                              <p className="text-2xl font-bold text-orange-300">{history[history.length - 1].confusion_matrix[1]?.[0] || 0}</p>
+                              <p className="text-sm font-semibold text-orange-400">False Negative</p>
+                              <p className="text-xs text-orange-500 mt-1">Attack classified as normal</p>
                             </div>
-                            <div className="text-center p-4 bg-gray-800 rounded-xl border border-purple-700 shadow-lg">
-                              <div className="w-12 h-12 bg-purple-900 rounded-full flex items-center justify-center mx-auto mb-2">
-                                <span className="text-purple-300 font-bold text-lg">{(item.f1_score * 100).toFixed(0)}%</span>
-                              </div>
-                              <p className="text-xl font-bold text-purple-300">{(item.f1_score * 100).toFixed(2)}%</p>
-                              <p className="text-sm font-semibold text-gray-300">F1 Score</p>
+                            <div className="p-4 bg-gradient-to-br from-blue-900/50 to-blue-800/50 text-center rounded-lg border border-blue-600">
+                              <p className="text-2xl font-bold text-blue-300">{history[history.length - 1].confusion_matrix[1]?.[1] || 0}</p>
+                              <p className="text-sm font-semibold text-blue-400">True Positive</p>
+                              <p className="text-xs text-blue-500 mt-1">Correctly classified as attack</p>
                             </div>
                           </div>
                         </div>
+                      )}
 
-                        {/* Detailed Results Grid */}
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                          {/* Confusion Matrix */}
-                          {item.confusion_matrix && Array.isArray(item.confusion_matrix) && (
-                            <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg">
-                              <h4 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-                                <BarChart3 className="h-5 w-5 text-indigo-400" />
-                                <span>Confusion Matrix</span>
-                              </h4>
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="p-4 bg-gradient-to-br from-green-900/50 to-green-800/50 text-center rounded-lg border border-green-600">
-                                  <p className="text-2xl font-bold text-green-300">{item.confusion_matrix[0]?.[0] || 0}</p>
-                                  <p className="text-sm font-semibold text-green-400">True Normal</p>
-                                  <p className="text-xs text-green-500 mt-1">Correctly classified as normal</p>
-                                </div>
-                                <div className="p-4 bg-gradient-to-br from-red-900/50 to-red-800/50 text-center rounded-lg border border-red-600">
-                                  <p className="text-2xl font-bold text-red-300">{item.confusion_matrix[0]?.[1] || 0}</p>
-                                  <p className="text-sm font-semibold text-red-400">False Positive</p>
-                                  <p className="text-xs text-red-500 mt-1">Normal classified as attack</p>
-                                </div>
-                                <div className="p-4 bg-gradient-to-br from-orange-900/50 to-orange-800/50 text-center rounded-lg border border-orange-600">
-                                  <p className="text-2xl font-bold text-orange-300">{item.confusion_matrix[1]?.[0] || 0}</p>
-                                  <p className="text-sm font-semibold text-orange-400">False Negative</p>
-                                  <p className="text-xs text-orange-500 mt-1">Attack classified as normal</p>
-                                </div>
-                                <div className="p-4 bg-gradient-to-br from-blue-900/50 to-blue-800/50 text-center rounded-lg border border-blue-600">
-                                  <p className="text-2xl font-bold text-blue-300">{item.confusion_matrix[1]?.[1] || 0}</p>
-                                  <p className="text-sm font-semibold text-blue-400">True Positive</p>
-                                  <p className="text-xs text-blue-500 mt-1">Correctly classified as attack</p>
-                                </div>
+                      {/* Predictions Summary */}
+                      {history[history.length - 1].prediction_results && (
+                        <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg">
+                          <h4 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
+                            <FileText className="h-5 w-5 text-emerald-400" />
+                            <span>Predictions Summary</span>
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg border border-gray-600">
+                              <span className="font-semibold text-gray-300">Total Predictions</span>
+                              <span className="text-lg font-bold text-white">{history[history.length - 1].prediction_results.total_predictions || 0}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-red-900/30 rounded-lg border border-red-700">
+                              <span className="font-semibold text-red-400">🚨 Attacks Detected</span>
+                              <span className="text-lg font-bold text-red-300">{history[history.length - 1].prediction_results.attacks_detected || 0}</span>
+                            </div>
+                            <div className="flex justify-between items-center p-3 bg-green-900/30 rounded-lg border border-green-700">
+                              <span className="font-semibold text-green-400">✅ Normal Traffic</span>
+                              <span className="text-lg font-bold text-green-300">{history[history.length - 1].prediction_results.normal_detected || 0}</span>
+                            </div>
+                            <div className="p-3 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 rounded-lg border border-blue-700">
+                              <div className="flex justify-between items-center mb-2">
+                                <span className="font-semibold text-blue-300">Attack Rate</span>
+                                <span className="text-lg font-bold text-blue-200">{history[history.length - 1].prediction_results.attack_percentage?.toFixed(1) || 0}%</span>
+                              </div>
+                              <div className="w-full bg-gray-700 rounded-full h-2">
+                                <div 
+                                  className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all duration-300"
+                                  style={{ width: `${Math.min(history[history.length - 1].prediction_results.attack_percentage || 0, 100)}%` }}
+                                ></div>
                               </div>
                             </div>
-                          )}
-
-                          {/* Predictions Summary */}
-                          {item.prediction_results && (
-                            <div className="bg-gray-800 p-5 rounded-xl border border-gray-700 shadow-lg">
-                              <h4 className="text-lg font-bold text-white mb-4 flex items-center space-x-2">
-                                <FileText className="h-5 w-5 text-emerald-400" />
-                                <span>Predictions Summary</span>
-                              </h4>
-                              <div className="space-y-3">
-                                <div className="flex justify-between items-center p-3 bg-gray-700/50 rounded-lg border border-gray-600">
-                                  <span className="font-semibold text-gray-300">Total Predictions</span>
-                                  <span className="text-lg font-bold text-white">{item.prediction_results.total_predictions || 0}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 bg-red-900/30 rounded-lg border border-red-700">
-                                  <span className="font-semibold text-red-400">🚨 Attacks Detected</span>
-                                  <span className="text-lg font-bold text-red-300">{item.prediction_results.attacks_detected || 0}</span>
-                                </div>
-                                <div className="flex justify-between items-center p-3 bg-green-900/30 rounded-lg border border-green-700">
-                                  <span className="font-semibold text-green-400">✅ Normal Traffic</span>
-                                  <span className="text-lg font-bold text-green-300">{item.prediction_results.normal_detected || 0}</span>
-                                </div>
-                                <div className="p-3 bg-gradient-to-r from-blue-900/30 to-indigo-900/30 rounded-lg border border-blue-700">
-                                  <div className="flex justify-between items-center mb-2">
-                                    <span className="font-semibold text-blue-300">Attack Rate</span>
-                                    <span className="text-lg font-bold text-blue-200">{item.prediction_results.attack_percentage?.toFixed(1) || 0}%</span>
-                                  </div>
-                                  <div className="w-full bg-gray-700 rounded-full h-2">
-                                    <div 
-                                      className="bg-gradient-to-r from-blue-500 to-blue-400 h-2 rounded-full transition-all duration-300"
-                                      style={{ width: `${Math.min(item.prediction_results.attack_percentage || 0, 100)}%` }}
-                                    ></div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )}
+                          </div>
                         </div>
-                        
-                        {/* Dataset Information */}
-                        {item.classification_report?.dataset_info && (
-                          <div className="bg-gray-800 p-5 rounded-xl border border-blue-700 shadow-lg">
-                            <h4 className="text-lg font-bold text-white mb-3 flex items-center space-x-2">
-                              <Database className="h-5 w-5 text-blue-400" />
-                              <span>Dataset Information</span>
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div className="text-center p-3 bg-blue-900/30 rounded-lg border border-blue-700">
-                                <p className="text-2xl font-bold text-blue-300">{item.classification_report.dataset_info.original_samples}</p>
-                                <p className="text-sm font-medium text-gray-300">Original Samples</p>
-                              </div>
-                              <div className="text-center p-3 bg-green-900/30 rounded-lg border border-green-700">
-                                <p className="text-2xl font-bold text-green-300">{item.classification_report.dataset_info.cleaned_samples}</p>
-                                <p className="text-sm font-medium text-gray-300">After Cleaning</p>
-                              </div>
-                              <div className="text-center p-3 bg-purple-900/30 rounded-lg border border-purple-700">
-                                <p className="text-2xl font-bold text-purple-300">{item.classification_report.dataset_info.final_features}</p>
-                                <p className="text-sm font-medium text-gray-300">Features Used</p>
-                              </div>
-                            </div>
-                            {item.classification_report.dataset_info.outliers_removed > 0 && (
-                              <div className="mt-3 p-3 bg-yellow-900/30 rounded-lg border border-yellow-700">
-                                <p className="text-sm font-medium text-yellow-300">
-                                  🔧 Data Preprocessing: Removed {item.classification_report.dataset_info.outliers_removed} outliers during cleaning
-                                </p>
-                              </div>
-                            )}
+                      )}
+                    </div>
+                    
+                    {/* Dataset Information */}
+                    {history[history.length - 1].classification_report?.dataset_info && (
+                      <div className="bg-gray-800 p-5 rounded-xl border border-blue-700 shadow-lg">
+                        <h4 className="text-lg font-bold text-white mb-3 flex items-center space-x-2">
+                          <Database className="h-5 w-5 text-blue-400" />
+                          <span>Dataset Information</span>
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center p-3 bg-blue-900/30 rounded-lg border border-blue-700">
+                            <p className="text-2xl font-bold text-blue-300">{history[history.length - 1].classification_report.dataset_info.original_samples}</p>
+                            <p className="text-sm font-medium text-gray-300">Original Samples</p>
+                          </div>
+                          <div className="text-center p-3 bg-green-900/30 rounded-lg border border-green-700">
+                            <p className="text-2xl font-bold text-green-300">{history[history.length - 1].classification_report.dataset_info.cleaned_samples}</p>
+                            <p className="text-sm font-medium text-gray-300">After Cleaning</p>
+                          </div>
+                          <div className="text-center p-3 bg-purple-900/30 rounded-lg border border-purple-700">
+                            <p className="text-2xl font-bold text-purple-300">{history[history.length - 1].classification_report.dataset_info.final_features}</p>
+                            <p className="text-sm font-medium text-gray-300">Features Used</p>
+                          </div>
+                        </div>
+                        {history[history.length - 1].classification_report.dataset_info.outliers_removed > 0 && (
+                          <div className="mt-3 p-3 bg-yellow-900/30 rounded-lg border border-yellow-700">
+                            <p className="text-sm font-medium text-yellow-300">
+                              🔧 Data Preprocessing: Removed {history[history.length - 1].classification_report.dataset_info.outliers_removed} outliers during cleaning
+                            </p>
                           </div>
                         )}
+                      </div>
+                    )}
 
-                        {/* Test Metadata */}
-                        <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-                          <div className="flex flex-wrap gap-4 text-sm text-gray-400">
-                            <div className="flex items-center space-x-2">
-                              <Clock className="h-4 w-4" />
-                              <span>Execution Time: <strong className="text-white">{typeof item.execution_time === 'number' ? item.execution_time.toFixed(2) : Number(item.execution_time || 0).toFixed(2)}s</strong></span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <FileText className="h-4 w-4" />
-                              <span>Dataset: <strong className="text-white">{item.dataset_filename}</strong></span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <Database className="h-4 w-4" />
-                              <span>Test ID: <strong className="text-white">#{item.id}</strong></span>
-                            </div>
-                          </div>
+                    {/* Test Metadata */}
+                    <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                      <div className="flex flex-wrap gap-4 text-sm text-gray-400">
+                        <div className="flex items-center space-x-2">
+                          <Clock className="h-4 w-4" />
+                          <span>Execution Time: <strong className="text-white">{typeof history[history.length - 1].execution_time === 'number' ? history[history.length - 1].execution_time.toFixed(2) : Number(history[history.length - 1].execution_time || 0).toFixed(2)}s</strong></span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <FileText className="h-4 w-4" />
+                          <span>Dataset: <strong className="text-white">{history[history.length - 1].dataset_filename}</strong></span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Database className="h-4 w-4" />
+                          <span>Test ID: <strong className="text-white">#{history[history.length - 1].id}</strong></span>
                         </div>
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
           )}
         </CardContent>
