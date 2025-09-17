@@ -252,28 +252,26 @@ async def test_model(model_name: str = Form(...), file: UploadFile = File(...), 
         
         # === MODEL TESTING WITH PIPELINE ===
         
-        # Check if model exists - use proper path resolution
-        api_dir = Path(__file__).parent.parent  # Go up to api directory
-        models_path = api_dir / Config.MODELS_DIR
-        model_path = models_path / f"{model_name}.pkl"
+        # Load the model using the proper pipeline manager
+        from models.ml_pipeline import MLPipelineManager
+        ml_manager = MLPipelineManager()
         
-        logger.info(f"Looking for model at: {model_path.absolute()}")
-        
-        if not model_path.exists():
-            # List available models for better error message
-            available_models = []
-            if models_path.exists():
-                available_models = [f.stem for f in models_path.glob("*.pkl")]
-            
+        try:
+            pipeline = ml_manager.load_model(model_name)
+            logger.info(f"Loaded trained pipeline for {model_name}")
+        except FileNotFoundError as e:
+            # Get available models for better error message
+            available_models = ml_manager.get_available_models()
             raise HTTPException(
-                status_code=404, 
-                detail=f"Model '{model_name}' not found at {model_path}. Available models: {available_models}"
+                status_code=404,
+                detail=f"Model '{model_name}' not found. Available models: {available_models}"
             )
-        
-        # Load the complete pipeline
-        import joblib
-        pipeline = joblib.load(str(model_path))
-        logger.info(f"Loaded trained pipeline for {model_name} from {model_path}")
+        except Exception as e:
+            logger.error(f"Error loading model {model_name}: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Error loading model '{model_name}': {str(e)}"
+            )
         
         # Get expected features from the pipeline
         if hasattr(pipeline, 'feature_names_in_'):

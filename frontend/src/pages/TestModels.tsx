@@ -334,6 +334,7 @@ const TestModels = () => {
                 {models.map((model) => {
                   const isSelected = selectedModel === model;
                   const modelDisplayName = model.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                  const modelLower = model.toLowerCase();
                   
                   return (
                     <button
@@ -372,11 +373,11 @@ const TestModels = () => {
                             text-sm transition-colors
                             ${isSelected ? 'text-green-400' : 'text-gray-400 group-hover:text-gray-300'}
                           `}>
-                            {model.includes('forest') && '🌲 Random Forest'}
-                            {model.includes('isolation') && '🔍 Isolation Forest'} 
-                            {model.includes('svm') && '⚡ SVM Algorithm'}
-                            {model.includes('autoencoder') && '🧠 Neural Network'}
-                            {!model.includes('forest') && !model.includes('isolation') && !model.includes('svm') && !model.includes('autoencoder') && '🤖 ML Model'}
+                            {modelLower.includes('forest') && !modelLower.includes('isolation') && '🌲 Random Forest'}
+                            {modelLower.includes('isolation') && '🔍 Isolation Forest'} 
+                            {modelLower.includes('svm') && '⚡ SVM Algorithm'}
+                            {modelLower.includes('autoencoder') && '🧠 Neural Network'}
+                            {!modelLower.includes('forest') && !modelLower.includes('isolation') && !modelLower.includes('svm') && !modelLower.includes('autoencoder') && '🤖 ML Model'}
                           </p>
                         </div>
                       </div>

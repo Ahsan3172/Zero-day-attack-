@@ -33,14 +33,33 @@ async def get_available_models():
             logger.warning(f"Models directory not found at: {models_path.absolute()}")
             return {"models": [], "message": f"No models directory found at {models_path}"}
         
-        # Get all .pkl files in the models directory
-        model_files = list(models_path.glob("*.pkl"))
-        models = [f.stem for f in model_files 
-                 if f.stem != "models_metadata" 
-                 and not f.stem.endswith("_preprocessor")
-                 and not f.stem.endswith("_metadata")]
-        
-        logger.info(f"Found {len(models)} available models: {models}")
+        # Read models from metadata file instead of just looking at .pkl files
+        metadata_file = models_path / "models_metadata.json"
+        if metadata_file.exists():
+            import json
+            with open(metadata_file, 'r') as f:
+                metadata = json.load(f)
+            models = list(metadata.keys())
+            logger.info(f"Found {len(models)} models in metadata: {models}")
+        else:
+            # Fallback to file-based detection for both .pkl and .keras files
+            pkl_files = list(models_path.glob("*.pkl"))
+            keras_files = list(models_path.glob("*.keras"))
+            
+            pkl_models = [f.stem for f in pkl_files 
+                         if f.stem != "models_metadata" 
+                         and not f.stem.endswith("_preprocessor")
+                         and not f.stem.endswith("_metadata")]
+            
+            # For keras files, extract model name from pattern like "autoencoder_autoencoder.keras"
+            keras_models = []
+            for f in keras_files:
+                parts = f.stem.split('_')
+                if len(parts) >= 2 and parts[0] == parts[1]:  # autoencoder_autoencoder pattern
+                    keras_models.append(parts[0])
+            
+            models = list(set(pkl_models + keras_models))
+            logger.info(f"Found {len(models)} models from files: {models}")
         
         return {
             "success": True,
