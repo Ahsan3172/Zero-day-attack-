@@ -344,4 +344,189 @@ router.get('/recent-activity', async (req, res) => {
   }
 });
 
+// @route   GET /api/dashboard/stats
+// @desc    Get comprehensive dashboard statistics
+// @access  Private
+router.get('/stats', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    // Get user-specific stats
+    const [userStats] = await executeQuery(`
+      SELECT 
+        COUNT(DISTINCT mr.id) as total_tests,
+        COALESCE(AVG(mr.accuracy), 0) as avg_accuracy,
+        COUNT(CASE WHEN mr.accuracy < 80 THEN 1 END) as potential_threats,
+        COUNT(CASE WHEN mr.accuracy >= 95 THEN 1 END) as high_performance,
+        MAX(mr.created_at) as last_test_date
+      FROM model_results mr
+      WHERE mr.user_id = ?
+    `, [userId]);
+
+    // Get recent test results for user
+    const recentTests = await executeQuery(`
+      SELECT mr.id, mr.accuracy, mr.precision_score, mr.recall_score, mr.f1_score,
+             mr.execution_time, mr.created_at,
+             m.task_id as model_name, m.current_model as algorithm,
+             d.original_name as dataset_name
+      FROM model_results mr
+      JOIN ml_models m ON mr.model_id = m.id
+      JOIN dataset_uploads d ON mr.dataset_id = d.id
+      WHERE mr.user_id = ?
+      ORDER BY mr.created_at DESC
+      LIMIT 5
+    `, [userId]);
+
+    // Get active training jobs for user
+    const [activeTraining] = await executeQuery(`
+      SELECT COUNT(*) as active_jobs
+      FROM ml_models
+      WHERE user_id = ? AND status IN ('running', 'pending')
+    `, [userId]);
+
+    let systemStats = {};
+    if (isAdmin) {
+      // Admin gets system-wide stats
+      const [systemWideStats] = await executeQuery(`
+        SELECT 
+          COUNT(DISTINCT mr.id) as total_tests_all,
+          COUNT(DISTINCT mr.user_id) as active_users,
+          COALESCE(AVG(mr.accuracy), 0) as system_avg_accuracy,
+          COUNT(CASE WHEN mr.accuracy < 80 THEN 1 END) as system_threats,
+          COUNT(CASE WHEN mr.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY) THEN 1 END) as tests_this_week
+        FROM model_results mr
+      `);
+
+      const topPerformers = await executeQuery(`
+        SELECT u.username, u.id,
+               COUNT(mr.id) as test_count,
+               COALESCE(AVG(mr.accuracy), 0) as avg_accuracy,
+               MAX(mr.created_at) as last_activity
+        FROM users u
+        JOIN model_results mr ON u.id = mr.user_id
+        GROUP BY u.id, u.username
+        HAVING test_count > 0
+        ORDER BY avg_accuracy DESC, test_count DESC
+        LIMIT 5
+      `);
+
+      systemStats = {
+        ...systemWideStats,
+        top_performers: topPerformers
+      };
+    }
+
+    // Get weekly activity data
+    const weeklyActivity = await executeQuery(`
+      SELECT 
+        DATE(mr.created_at) as date,
+        COUNT(*) as tests,
+        COALESCE(AVG(mr.accuracy), 0) as avg_accuracy
+      FROM model_results mr
+      WHERE mr.user_id = ? 
+        AND mr.created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+      GROUP BY DATE(mr.created_at)
+      ORDER BY date DESC
+    `, [userId]);
+
+    res.json({
+      success: true,
+      data: {
+        user_stats: userStats || {
+          total_tests: 0,
+          avg_accuracy: 0,
+          potential_threats: 0,
+          high_performance: 0,
+          last_test_date: null
+        },
+        recent_tests: recentTests,
+        active_training: activeTraining || { active_jobs: 0 },
+        weekly_activity: weeklyActivity,
+        system_stats: systemStats
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error fetching dashboard stats:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch dashboard statistics',
+      error: error.message
+    });
+  }
+});
+
+// @route   GET /api/dashboard/threats
+// @desc    Get threat analysis data
+// @access  Private
+router.get('/threats', async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const isAdmin = req.user.role === 'admin';
+
+    const userCondition = isAdmin ? '' : 'WHERE mr.user_id = ?';
+    const params = isAdmin ? [] : [userId];
+
+    // Threat distribution by accuracy ranges
+    const threatDistribution = await executeQuery(`
+      SELECT 
+        CASE 
+          WHEN mr.accuracy >= 95 THEN 'Excellent'
+          WHEN mr.accuracy >= 90 THEN 'Very Good'
+          WHEN mr.accuracy >= 80 THEN 'Good'
+          WHEN mr.accuracy >= 70 THEN 'Fair'
+          ELSE 'Needs Attention'
+        END as threat_level,
+        COUNT(*) as count,
+        COALESCE(AVG(mr.accuracy), 0) as avg_accuracy
+      FROM model_results mr
+      ${userCondition}
+      GROUP BY 
+        CASE 
+          WHEN mr.accuracy >= 95 THEN 'Excellent'
+          WHEN mr.accuracy >= 90 THEN 'Very Good'
+          WHEN mr.accuracy >= 80 THEN 'Good'
+          WHEN mr.accuracy >= 70 THEN 'Fair'
+          ELSE 'Needs Attention'
+        END
+      ORDER BY avg_accuracy DESC
+    `, params);
+
+    // Algorithm performance comparison
+    const algorithmPerformance = await executeQuery(`
+      SELECT 
+        m.current_model as algorithm,
+        COUNT(mr.id) as test_count,
+        COALESCE(AVG(mr.accuracy), 0) as avg_accuracy,
+        COALESCE(AVG(mr.precision_score), 0) as avg_precision,
+        COALESCE(AVG(mr.recall_score), 0) as avg_recall,
+        COALESCE(AVG(mr.f1_score), 0) as avg_f1,
+        COALESCE(AVG(mr.execution_time), 0) as avg_execution_time
+      FROM model_results mr
+      JOIN ml_models m ON mr.model_id = m.id
+      ${userCondition}
+      GROUP BY m.current_model
+      HAVING test_count > 0
+      ORDER BY avg_accuracy DESC
+    `, params);
+
+    res.json({
+      success: true,
+      data: {
+        threat_distribution: threatDistribution,
+        algorithm_performance: algorithmPerformance
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error fetching threat analysis:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch threat analysis',
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

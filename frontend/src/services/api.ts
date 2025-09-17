@@ -400,4 +400,34 @@ export const adminApi = {
   },
 };
 
+// Helper function for authenticated requests
+export const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<any> => {
+  const token = tokenManager.getToken();
+  
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+  if (!response.ok) {
+    if (response.status === 401) {
+      // Token expired or invalid
+      tokenManager.removeToken();
+      window.location.href = '/login';
+      throw new Error('Authentication failed');
+    }
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+
+  return response.json();
+};
+
 export default apiClient;

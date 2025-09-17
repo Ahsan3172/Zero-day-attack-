@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, AlertCircle, CheckCircle, FileText, BarChart3, Activity, History, ChevronDown, Clock, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ModelTestResults {
   success: boolean;
@@ -64,6 +65,32 @@ const TestModels = () => {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [expandedHistoryId, setExpandedHistoryId] = useState<number | null>(null);
   const { toast } = useToast();
+  const { user, isAuthenticated } = useAuth();
+
+  // Utility function to make authenticated API calls
+  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+    const token = localStorage.getItem('auth_token');
+    
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`,
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ message: 'Request failed' }));
+      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return response.json();
+  };
 
   // Fetch available trained models
   useEffect(() => {
@@ -101,17 +128,35 @@ const TestModels = () => {
     fetchModels();
   }, [toast]);
 
-  // Fetch testing history
+  // Fetch testing history - user-specific results from backend
   useEffect(() => {
     const fetchHistory = async () => {
+      if (!isAuthenticated || !user) return;
+      
       try {
         setLoadingHistory(true);
-        const response = await fetch("http://localhost:8000/api/v1/models/history/1"); // Default user_id = 1
-        const data = await response.json();
+        // Use the backend API endpoint to get user-specific results
+        const data = await fetchWithAuth("http://localhost:5000/api/models/results?limit=50");
         
         if (data.success) {
-          setHistory(data.history || []);
-          console.log("History loaded:", data.history);
+          // Transform the API response to match the TestHistoryItem interface
+          const transformedHistory: TestHistoryItem[] = data.data.results.map((result: any) => ({
+            id: result.id,
+            model_name: result.model_name,
+            dataset_filename: result.dataset_name,
+            accuracy: result.accuracy,
+            precision_score: result.precision_score,
+            recall_score: result.recall_score,
+            f1_score: result.f1_score,
+            confusion_matrix: result.confusion_matrix || [],
+            classification_report: result.classification_report || {},
+            prediction_results: result.prediction_results || {},
+            execution_time: result.execution_time || 0,
+            created_at: result.created_at
+          }));
+          
+          setHistory(transformedHistory);
+          console.log(`Testing history loaded for user ${user.username} (ID: ${user.id}):`, transformedHistory);
         } else {
           console.warn("Failed to fetch history:", data);
         }
@@ -128,7 +173,7 @@ const TestModels = () => {
     };
 
     fetchHistory();
-  }, [toast]);
+  }, [isAuthenticated, user, toast]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -159,6 +204,15 @@ const TestModels = () => {
       return;
     }
 
+    if (!isAuthenticated || !user) {
+      toast({
+        title: "Authentication required",
+        description: "Please log in to test models",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsLoading(true);
     setResults(null);
 
@@ -166,7 +220,7 @@ const TestModels = () => {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("model_name", selectedModel);
-      formData.append("user_id", "1"); // Default user ID
+      formData.append("user_id", user.id.toString()); // Use authenticated user's ID
 
       const response = await fetch("http://localhost:8000/api/v1/models/test", {
         method: "POST",
@@ -182,12 +236,25 @@ const TestModels = () => {
           description: `Model ${selectedModel} tested successfully`,
         });
         
-        // Refresh history after successful test
+        // Refresh history after successful test - use authenticated API call
         try {
-          const historyResponse = await fetch("http://localhost:8000/api/v1/models/history/1");
-          const historyData = await historyResponse.json();
+          const historyData = await fetchWithAuth("http://localhost:5000/api/models/results?limit=50");
           if (historyData.success) {
-            setHistory(historyData.history || []);
+            const transformedHistory: TestHistoryItem[] = historyData.data.results.map((result: any) => ({
+              id: result.id,
+              model_name: result.model_name,
+              dataset_filename: result.dataset_name,
+              accuracy: result.accuracy,
+              precision_score: result.precision_score,
+              recall_score: result.recall_score,
+              f1_score: result.f1_score,
+              confusion_matrix: result.confusion_matrix || [],
+              classification_report: result.classification_report || {},
+              prediction_results: result.prediction_results || {},
+              execution_time: result.execution_time || 0,
+              created_at: result.created_at
+            }));
+            setHistory(transformedHistory);
           }
         } catch (historyError) {
           console.warn("Failed to refresh history:", historyError);
@@ -208,6 +275,19 @@ const TestModels = () => {
   };
 
   const formatPercentage = (value: number) => `${(value * 100).toFixed(1)}%`;
+
+  // Authentication guard
+  if (!isAuthenticated || !user) {
+    return (
+      <div className="p-6 space-y-6">
+        <div className="text-center">
+          <AlertCircle className="h-12 w-12 mx-auto text-warning mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Authentication Required</h2>
+          <p className="text-muted-foreground">Please log in to access model testing and view your testing history.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -605,9 +685,9 @@ const TestModels = () => {
                 <History className="h-5 w-5 text-blue-400" />
               </div>
               <div>
-                <span className="text-xl font-bold text-white">Testing History</span>
+                <span className="text-xl font-bold text-white">Your Testing History</span>
                 <p className="text-sm text-gray-400 font-normal mt-1">
-                  {history.length === 0 ? "No tests yet" : `${history.length} test${history.length !== 1 ? 's' : ''} completed`}
+                  {history.length === 0 ? `Welcome ${user.username}, no tests yet` : `${user.username}: ${history.length} test${history.length !== 1 ? 's' : ''} completed`}
                 </p>
               </div>
             </div>
@@ -631,9 +711,9 @@ const TestModels = () => {
               <div className="p-4 bg-gray-800 rounded-full mb-4">
                 <Database className="h-10 w-10 text-gray-500" />
               </div>
-              <p className="text-lg font-semibold text-gray-200 mb-2">No testing history yet</p>
+              <p className="text-lg font-semibold text-gray-200 mb-2">No personal testing history yet</p>
               <p className="text-sm text-center max-w-md text-gray-400">
-                Start testing your models with datasets to see detailed results and performance metrics here. 
+                Hi {user.username}! Start testing your models with datasets to see detailed results and performance metrics here. 
                 All your test results will be saved and available for review.
               </p>
               <div className="mt-4 px-4 py-2 bg-blue-900/20 rounded-lg border border-blue-800">
@@ -694,7 +774,7 @@ const TestModels = () => {
                         </div>
                         <div className="bg-orange-900/30 px-3 py-2 rounded-lg border border-orange-800">
                           <p className="text-xs font-medium text-orange-400 uppercase tracking-wide">Duration</p>
-                          <p className="text-lg font-bold text-orange-300">{item.execution_time?.toFixed(1) || '0.0'}s</p>
+                          <p className="text-lg font-bold text-orange-300">{typeof item.execution_time === 'number' ? item.execution_time.toFixed(1) : Number(item.execution_time || 0).toFixed(1)}s</p>
                         </div>
                         <div className="bg-gray-700/50 px-3 py-2 rounded-lg border border-gray-600 md:block hidden">
                           <p className="text-xs font-medium text-gray-400 uppercase tracking-wide">Predictions</p>
@@ -852,7 +932,7 @@ const TestModels = () => {
                           <div className="flex flex-wrap gap-4 text-sm text-gray-400">
                             <div className="flex items-center space-x-2">
                               <Clock className="h-4 w-4" />
-                              <span>Execution Time: <strong className="text-white">{item.execution_time?.toFixed(2) || '0.00'}s</strong></span>
+                              <span>Execution Time: <strong className="text-white">{typeof item.execution_time === 'number' ? item.execution_time.toFixed(2) : Number(item.execution_time || 0).toFixed(2)}s</strong></span>
                             </div>
                             <div className="flex items-center space-x-2">
                               <FileText className="h-4 w-4" />

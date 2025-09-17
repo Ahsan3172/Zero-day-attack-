@@ -180,6 +180,129 @@ router.get('/training-history', async (req, res) => {
   }
 });
 
+// @route   GET /api/models/results
+// @desc    Get user's prediction results
+// @access  Private
+router.get('/results', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const results = await executeQuery(`
+      SELECT mr.id, mr.accuracy, mr.precision_score, mr.recall_score, mr.f1_score,
+             mr.execution_time, mr.created_at,
+             m.task_id as model_name, m.current_model as algorithm,
+             d.original_name as dataset_name
+      FROM model_results mr
+      JOIN ml_models m ON mr.model_id = m.id
+      JOIN dataset_uploads d ON mr.dataset_id = d.id
+      WHERE mr.user_id = ?
+      ORDER BY mr.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [req.user.id, limit, offset]);
+
+    const [{ total }] = await executeQuery(
+      'SELECT COUNT(*) as total FROM model_results WHERE user_id = ?',
+      [req.user.id]
+    );
+
+    res.json({
+      success: true,
+      message: 'Results retrieved successfully',
+      data: {
+        results,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error fetching results:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to retrieve results'
+    });
+  }
+});
+
+// @route   GET /api/models/results/:resultId/download
+// @desc    Download a specific test result as PDF
+// @access  Private
+router.get('/results/:resultId/download', async (req, res) => {
+  try {
+    const { resultId } = req.params;
+    const format = req.query.format || 'pdf'; // pdf or json
+
+    // Get the result data
+    const results = await executeQuery(`
+      SELECT mr.*, 
+             m.task_id as model_name, m.current_model as algorithm,
+             d.original_name as dataset_name
+      FROM model_results mr
+      JOIN ml_models m ON mr.model_id = m.id
+      JOIN dataset_uploads d ON mr.dataset_id = d.id
+      WHERE mr.id = ? AND mr.user_id = ?
+    `, [resultId, req.user.id]);
+
+    if (results.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Result not found'
+      });
+    }
+
+    const result = results[0];
+
+    if (format === 'json') {
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="test-result-${resultId}.json"`);
+      return res.json(result);
+    }
+
+    // For PDF format, we'll return the data structure for now
+    // In a real implementation, you'd use a PDF generation library like puppeteer or jsPDF
+    const reportData = {
+      title: `Test Result Report - ${result.model_name}`,
+      generatedAt: new Date().toISOString(),
+      testInfo: {
+        testId: result.id,
+        modelName: result.model_name,
+        algorithm: result.algorithm,
+        datasetName: result.dataset_name,
+        executionTime: result.execution_time,
+        testDate: result.created_at
+      },
+      metrics: {
+        accuracy: result.accuracy,
+        precision: result.precision_score,
+        recall: result.recall_score,
+        f1Score: result.f1_score
+      },
+      detailedResults: {
+        confusionMatrix: result.confusion_matrix,
+        classificationReport: result.classification_report,
+        predictionResults: result.prediction_results
+      }
+    };
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="test-result-${resultId}.json"`);
+    res.json(reportData);
+
+  } catch (error) {
+    logger.error('Error downloading result:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to download result'
+    });
+  }
+});
+
 // @route   GET /api/models/:id
 // @desc    Get specific model details
 // @access  Private
@@ -421,55 +544,7 @@ router.get('/results/:resultId', async (req, res) => {
   }
 });
 
-// @route   GET /api/models/results
-// @desc    Get user's prediction results
-// @access  Private
-router.get('/results', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const offset = (page - 1) * limit;
 
-    const results = await executeQuery(`
-      SELECT mr.id, mr.accuracy, mr.precision_score, mr.recall_score, mr.f1_score,
-             mr.execution_time, mr.created_at,
-             m.name as model_name, m.algorithm,
-             d.original_name as dataset_name
-      FROM model_results mr
-      JOIN ml_models m ON mr.model_id = m.id
-      JOIN dataset_uploads d ON mr.dataset_id = d.id
-      WHERE mr.user_id = ?
-      ORDER BY mr.created_at DESC
-      LIMIT ? OFFSET ?
-    `, [req.user.id, limit, offset]);
-
-    const [{ total }] = await executeQuery(
-      'SELECT COUNT(*) as total FROM model_results WHERE user_id = ?',
-      [req.user.id]
-    );
-
-    res.json({
-      success: true,
-      message: 'Results retrieved successfully',
-      data: {
-        results,
-        pagination: {
-          page,
-          limit,
-          total,
-          totalPages: Math.ceil(total / limit)
-        }
-      }
-    });
-
-  } catch (error) {
-    logger.error('Error fetching results:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to retrieve results'
-    });
-  }
-});
 
 // @route   DELETE /api/models/results/:resultId
 // @desc    Delete a prediction result
@@ -948,6 +1023,100 @@ router.delete('/training/:id', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to delete training job'
+    });
+  }
+});
+
+// @route   GET /api/models/debug/results
+// @desc    Debug: Get all model results with user info
+// @access  Private
+router.get('/debug/results', async (req, res) => {
+  try {
+    const allResultsQuery = `
+      SELECT mr.*, u.username, u.id as user_id_check
+      FROM model_results mr
+      LEFT JOIN users u ON mr.user_id = u.id
+      ORDER BY mr.created_at DESC
+      LIMIT 20
+    `;
+
+    const userCountQuery = `
+      SELECT user_id, COUNT(*) as count, u.username
+      FROM model_results mr
+      LEFT JOIN users u ON mr.user_id = u.id
+      GROUP BY user_id, u.username
+    `;
+
+    const allResults = await executeQuery(allResultsQuery);
+    const userCounts = await executeQuery(userCountQuery);
+
+    res.json({
+      success: true,
+      message: `Found ${allResults.length} model results`,
+      data: {
+        all_results: allResults,
+        results_by_user: userCounts,
+        current_user_id: req.user?.id
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error in debug results:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch debug results',
+      error: error.message
+    });
+  }
+});
+
+// @route   GET /api/models/debug/all-results
+// @desc    Debug: Get results for all users (temporary)
+// @access  Private
+router.get('/debug/all-results', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    const results = await executeQuery(`
+      SELECT mr.id, mr.accuracy, mr.precision_score, mr.recall_score, mr.f1_score,
+             mr.execution_time, mr.created_at, mr.user_id,
+             m.task_id as model_name, m.current_model as algorithm,
+             d.original_name as dataset_name,
+             u.username
+      FROM model_results mr
+      JOIN ml_models m ON mr.model_id = m.id
+      JOIN dataset_uploads d ON mr.dataset_id = d.id
+      JOIN users u ON mr.user_id = u.id
+      ORDER BY mr.created_at DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    const [{ total }] = await executeQuery(
+      'SELECT COUNT(*) as total FROM model_results'
+    );
+
+    res.json({
+      success: true,
+      message: 'All results retrieved successfully',
+      data: {
+        results,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages: Math.ceil(total / limit)
+        }
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error fetching all results:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch all results',
+      error: error.message
     });
   }
 });

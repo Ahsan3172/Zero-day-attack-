@@ -17,6 +17,7 @@ import Models from "./pages/Models";
 import TrainModel from "./pages/TrainModel";
 import Users from "./pages/Users";
 import Reports from "./pages/Reports";
+import Debug from "./pages/Debug";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -94,6 +95,14 @@ const App = () => (
               <ProtectedRoute>
                 <DashboardLayout>
                   <Reports />
+                </DashboardLayout>
+              </ProtectedRoute>
+            } />
+            
+            <Route path="/debug" element={
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Debug />
                 </DashboardLayout>
               </ProtectedRoute>
             } />
