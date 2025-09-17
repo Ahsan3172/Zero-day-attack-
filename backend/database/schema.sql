@@ -80,6 +80,8 @@ CREATE TABLE ml_models (
     message TEXT,
     error_details TEXT,
     models_completed JSON, -- Array of completed models
+    model_paths JSON, -- JSON object containing paths to trained model files
+    metrics JSON, -- JSON object containing model performance metrics
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     completed_at TIMESTAMP NULL,
