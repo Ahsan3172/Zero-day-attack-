@@ -1,6 +1,10 @@
 import os
 from pathlib import Path
 
+# Suppress TensorFlow informational messages
+os.environ.setdefault('TF_CPP_MIN_LOG_LEVEL', '2')  # 0=all, 1=INFO, 2=WARNING, 3=ERROR
+os.environ.setdefault('TF_ENABLE_ONEDNN_OPTS', '0')  # Disable oneDNN custom operations messages
+
 class Config:
     """Configuration settings for the API"""
     

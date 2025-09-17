@@ -1537,3 +1537,7 @@ ValueError: Mix of label input types (string and number)
 2025-09-16 13:45:37,546 - routes.predictions - INFO - Test results saved to database with ID: 4
 2025-09-17 06:39:02,705 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
 2025-09-17 06:39:02,709 - routes.models - INFO - Found 4 available models: ['autoencoder', 'isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-17 06:42:18,205 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-17 06:42:18,213 - routes.models - INFO - Found 4 available models: ['autoencoder', 'isolation_forest', 'one_class_svm', 'random_forest']
+2025-09-17 06:44:07,112 - routes.models - INFO - Looking for models in: C:\Users\adnan\OneDrive\Documents\Projects\Zero_Day_Attack\api\saved_models
+2025-09-17 06:44:07,115 - routes.models - INFO - Found 4 available models: ['autoencoder', 'isolation_forest', 'one_class_svm', 'random_forest']
