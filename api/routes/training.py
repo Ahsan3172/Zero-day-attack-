@@ -10,6 +10,7 @@ from models.model_trainer import ModelTrainer
 from models.data_processor import DataProcessor
 from utils.response_formatter import ResponseFormatter
 from utils.file_handler import FileHandler
+from config import Config
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1", tags=["training"])
@@ -117,7 +118,7 @@ def run_training_thread(task_id: str, request: TrainingRequest):
         )
         
         # Use default dataset if none provided
-        dataset_path = request.dataset_path or "c:\\Users\\adnan\\OneDrive\\Documents\\Projects\\Zero_Day_Attack\\dataset\\unswnb15_dataset.csv"
+        dataset_path = request.dataset_path or Config.DEFAULT_DATASET_PATH
         
         # Process dataset
         logger.info(f"Processing dataset: {dataset_path}")
@@ -361,7 +362,7 @@ async def delete_training_job(task_id: str):
         if "model_paths" in job_data and job_data["model_paths"]:
             import os
             for model_type, model_path in job_data["model_paths"].items():
-                full_path = os.path.join("C:\\Users\\adnan\\OneDrive\\Documents\\Projects\\Zero_Day_Attack\\api", model_path)
+                full_path = os.path.join(str(Config.MODELS_DIR), model_path.replace("saved_models/", ""))
                 if os.path.exists(full_path):
                     try:
                         os.remove(full_path)
