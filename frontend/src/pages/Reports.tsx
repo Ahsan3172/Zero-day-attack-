@@ -662,43 +662,45 @@ const Reports = () => {
                 </div>
               </div>
             ) : algorithmData.length === 1 ? (
-              <div className="h-64 md:h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      dataKey="accuracy"
-                      data={[
-                        { name: 'Accuracy', value: algorithmData[0].accuracy, fill: '#2563eb' },
-                        { name: 'Precision', value: algorithmData[0].precision, fill: '#10b981' },
-                        { name: 'Recall', value: algorithmData[0].recall, fill: '#f59e0b' },
-                        { name: 'F1 Score', value: algorithmData[0].f1Score, fill: '#ef4444' }
-                      ]}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={({ name, value }) => `${name}: ${typeof value === 'number' ? value.toFixed(1) : '0.0'}%`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                    >
-                      {[
-                        { name: 'Accuracy', value: algorithmData[0].accuracy, fill: '#2563eb' },
-                        { name: 'Precision', value: algorithmData[0].precision, fill: '#10b981' },
-                        { name: 'Recall', value: algorithmData[0].recall, fill: '#f59e0b' },
-                        { name: 'F1 Score', value: algorithmData[0].f1Score, fill: '#ef4444' }
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="text-center mt-4">
-                  <p className="text-sm text-muted-foreground">
-                    Performance metrics for {algorithmData[0].name} algorithm
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Based on {algorithmData[0].count} test{algorithmData[0].count > 1 ? 's' : ''}
-                  </p>
+              <div className="h-64 md:h-80 flex flex-col items-center justify-center">
+                <div className="w-full flex items-center justify-center" style={{height: '70%'}}>
+                  <ResponsiveContainer width="80%" height="100%">
+                    <PieChart>
+                      <Pie
+                        dataKey="accuracy"
+                        data={[
+                          { name: 'Accuracy', value: algorithmData[0].accuracy, fill: '#2563eb' },
+                          { name: 'Precision', value: algorithmData[0].precision, fill: '#10b981' },
+                          { name: 'Recall', value: algorithmData[0].recall, fill: '#f59e0b' },
+                          { name: 'F1 Score', value: algorithmData[0].f1Score, fill: '#ef4444' }
+                        ]}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ name, value }) => `${name}: ${typeof value === 'number' ? value.toFixed(1) : '0.0'}%`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                      >
+                        {[
+                          { name: 'Accuracy', value: algorithmData[0].accuracy, fill: '#2563eb' },
+                          { name: 'Precision', value: algorithmData[0].precision, fill: '#10b981' },
+                          { name: 'Recall', value: algorithmData[0].recall, fill: '#f59e0b' },
+                          { name: 'F1 Score', value: algorithmData[0].f1Score, fill: '#ef4444' }
+                        ].map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="w-full flex flex-col items-center mt-2">
+                  <span className="inline-block px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-semibold text-sm mb-1 shadow">
+                    Performance metrics for <span className="font-bold">{algorithmData[0].name}</span> algorithm
+                  </span>
+                  <span className="inline-block px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-xs shadow">
+                    Based on <span className="font-bold">{algorithmData[0].count}</span> test{algorithmData[0].count > 1 ? 's' : ''}
+                  </span>
                 </div>
               </div>
             ) : (

@@ -189,9 +189,10 @@ router.get('/results', async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
-    const results = await executeQuery(`
+    const resultsRaw = await executeQuery(`
       SELECT mr.id, mr.accuracy, mr.precision_score, mr.recall_score, mr.f1_score,
              mr.execution_time, mr.created_at,
+             mr.confusion_matrix, mr.classification_report, mr.prediction_results,
              m.task_id as model_name, m.current_model as algorithm,
              d.original_name as dataset_name
       FROM model_results mr
@@ -201,6 +202,19 @@ router.get('/results', async (req, res) => {
       ORDER BY mr.created_at DESC
       LIMIT ? OFFSET ?
     `, [req.user.id, limit, offset]);
+
+    // Parse JSON fields for each result
+    const results = resultsRaw.map(r => ({
+      ...r,
+      confusion_matrix: typeof r.confusion_matrix === 'string' ? JSON.parse(r.confusion_matrix) : r.confusion_matrix,
+      classification_report: typeof r.classification_report === 'string' ? JSON.parse(r.classification_report) : r.classification_report,
+      prediction_results: typeof r.prediction_results === 'string' ? JSON.parse(r.prediction_results) : r.prediction_results,
+      accuracy: typeof r.accuracy === 'string' ? Number(r.accuracy) : r.accuracy,
+      precision_score: typeof r.precision_score === 'string' ? Number(r.precision_score) : r.precision_score,
+      recall_score: typeof r.recall_score === 'string' ? Number(r.recall_score) : r.recall_score,
+      f1_score: typeof r.f1_score === 'string' ? Number(r.f1_score) : r.f1_score,
+      execution_time: typeof r.execution_time === 'string' ? Number(r.execution_time) : r.execution_time
+    }));
 
     const [{ total }] = await executeQuery(
       'SELECT COUNT(*) as total FROM model_results WHERE user_id = ?',
