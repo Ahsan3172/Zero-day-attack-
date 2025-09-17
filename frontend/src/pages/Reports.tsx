@@ -676,7 +676,7 @@ const Reports = () => {
                       cx="50%"
                       cy="50%"
                       labelLine={false}
-                      label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}
+                      label={({ name, value }) => `${name}: ${typeof value === 'number' ? value.toFixed(1) : '0.0'}%`}
                       outerRadius={80}
                       fill="#8884d8"
                     >
@@ -797,17 +797,15 @@ const Reports = () => {
                       Completed
                     </Badge>
                     <Button 
-                      size="sm" 
-                      variant="outline"
                       onClick={() => handleDownloadResult(result.id, 'json')}
+                      className="h-9 px-3 border-2 border-blue-500 bg-white text-blue-600 hover:bg-blue-50 font-medium transition-colors"
                     >
                       <Download className="h-4 w-4 mr-1" />
                       JSON
                     </Button>
                     <Button 
-                      size="sm" 
-                      variant="outline"
                       onClick={() => handleDownloadResult(result.id, 'pdf')}
+                      className="h-9 px-3 border-2 border-green-500 bg-white text-green-600 hover:bg-green-50 font-medium transition-colors"
                     >
                       <Download className="h-4 w-4 mr-1" />
                       PDF
@@ -824,18 +822,16 @@ const Reports = () => {
                   </p>
                   <div className="flex space-x-2">
                     <Button 
-                      size="sm" 
-                      variant="outline"
                       disabled={pagination.page <= 1}
                       onClick={() => fetchModelResults(pagination.page - 1)}
+                      className="h-9 px-3 border-2 border-gray-600 bg-white text-gray-700 hover:bg-gray-50 font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 disabled:border-gray-300 disabled:text-gray-400"
                     >
                       Previous
                     </Button>
                     <Button 
-                      size="sm" 
-                      variant="outline"
                       disabled={pagination.page >= pagination.totalPages}
                       onClick={() => fetchModelResults(pagination.page + 1)}
+                      className="h-9 px-3 border-2 border-gray-600 bg-white text-gray-700 hover:bg-gray-50 font-medium transition-colors disabled:pointer-events-none disabled:opacity-50 disabled:border-gray-300 disabled:text-gray-400"
                     >
                       Next
                     </Button>
