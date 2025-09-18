@@ -424,7 +424,7 @@ const TestModels = () => {
               {/* Help Text */}
               <div className="mt-4 p-3 bg-gray-800/50 rounded-lg border border-gray-700">
                 <p className="text-sm text-gray-400">
-                  <span className="text-blue-400 font-medium">💡 Tip:</span> Select a model that best fits your network security requirements. 
+                  <span className="text-blue-400 font-medium">💡 Tip:</span> Select a model that best fits your network security requirements.
                   Random Forest models are great for general-purpose detection, while Isolation Forest excels at anomaly detection.
                 </p>
               </div>
@@ -482,7 +482,7 @@ const TestModels = () => {
               />
               <label htmlFor="file-upload" className="cursor-pointer">
                 <span className="text-blue-600 hover:text-blue-700 font-medium">Click to upload CSV</span>
-                <span className="text-gray-600 font-medium"> or drag and drop</span>
+                <span className="text-gray-500 font-medium"> or drag and drop</span>
               </label>
               {file && (
                 <p className="mt-2 text-sm text-green-600">
@@ -490,7 +490,7 @@ const TestModels = () => {
                 </p>
               )}
             </div>
-            <div className="text-sm text-gray-700 font-medium">
+            <div className="text-sm text-gray-500 font-medium">
               <p>• Upload a CSV file with network traffic data</p>
               <p>• Must include a 'label' column for performance evaluation</p>
               <p>• Raw data will be automatically cleaned (missing values, outliers, etc.)</p>

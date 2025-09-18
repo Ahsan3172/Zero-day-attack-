@@ -49,8 +49,8 @@ export function AppSidebar() {
   const { logout, user } = useAuth();
 
   const isActive = (path: string) => currentPath === path;
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-sidebar-accent text-sidebar-primary font-medium" : "hover:bg-sidebar-accent/50";
+  const getNavCls = (path: string) =>
+    isActive(path) ? "bg-sidebar-accent text-sidebar-primary font-medium" : "hover:bg-sidebar-accent/50";
 
   const handleNavClick = () => {
     if (isMobile) {
@@ -93,15 +93,19 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent>
+      <SidebarContent className="scrollbar-hide">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
               {filteredMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
-                    <NavLink to={item.url} className={getNavCls} onClick={handleNavClick}>
-                      {state !== "collapsed" && <item.icon className="h-5 w-5" />}
+                    <NavLink
+                      to={item.url}
+                      className={getNavCls(item.url)}
+                      onClick={handleNavClick}
+                    >
+                      <item.icon className="h-5 w-5" />
                       {state !== "collapsed" && <span className="ml-3">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
@@ -113,8 +117,8 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4">
-        {state !== "collapsed" && (
-          <Button 
+        {state !== "collapsed" ? (
+          <Button
             variant="destructive" 
             size="sm"
             className="w-full justify-start"
@@ -122,6 +126,15 @@ export function AppSidebar() {
           >
             <LogOut className="h-4 w-4 mr-2" />
             <span>Logout</span>
+          </Button>
+        ) : (
+          <Button
+            variant="destructive"
+            size="sm"
+            className="w-full justify-center p-2"
+            onClick={handleLogout}
+          >
+            <LogOut className="h-4 w-4" />
           </Button>
         )}
       </SidebarFooter>
