@@ -7,7 +7,7 @@ describe('Performance Tests', () => {
       const startTime = Date.now();
       
       await request(app)
-        .get('/api/health')
+        .get('/health')
         .expect(200);
       
       const responseTime = Date.now() - startTime;
@@ -19,7 +19,7 @@ describe('Performance Tests', () => {
       const requests = [];
 
       for (let i = 0; i < concurrentRequests; i++) {
-        requests.push(request(app).get('/api/health'));
+        requests.push(request(app).get('/health'));
       }
 
       const startTime = Date.now();

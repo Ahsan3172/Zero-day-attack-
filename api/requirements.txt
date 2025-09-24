@@ -14,7 +14,7 @@ passlib[bcrypt]
 matplotlib
 seaborn
 mysql-connector-python
-
+psutil
 # Testing dependencies
 pytest
 pytest-asyncio
