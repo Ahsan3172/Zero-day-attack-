@@ -12,7 +12,7 @@ interface TrainingJob {
   task_id: string;
   user_id: number;
   dataset_path: string;
-  model_types: any; // JSON field
+  model_types: string[]; // JSON field containing array of model types
   test_size: number;
   random_state: number;
   status: string;
@@ -20,7 +20,7 @@ interface TrainingJob {
   current_model?: string;
   message?: string;
   error_details?: string;
-  models_completed?: any; // JSON field
+  models_completed?: string[]; // JSON field containing array of completed models
   created_at: string;
   updated_at?: string;
   completed_at?: string;
@@ -355,16 +355,25 @@ export function TrainingHistory() {
                     </div>
                   )}
 
-                  {job.models_completed && typeof job.models_completed === 'object' && (
+                  {job.models_completed && typeof job.models_completed === 'object' && !Array.isArray(job.models_completed) && (
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                      {Object.entries(job.models_completed).map(([modelName, modelData]: [string, any]) => (
+                      {Object.entries(job.models_completed).map(([modelName, modelData]) => (
                         <div key={modelName} className="text-center p-2 bg-muted rounded-md">
                           <div className="text-sm font-semibold">{modelName}</div>
-                          {modelData?.accuracy && (
+                          {typeof modelData === 'object' && modelData && 'accuracy' in modelData && (
                             <div className="text-xs text-muted-foreground">
-                              Acc: {(modelData.accuracy * 100).toFixed(1)}%
+                              Acc: {((modelData as { accuracy: number }).accuracy * 100).toFixed(1)}%
                             </div>
                           )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {job.models_completed && Array.isArray(job.models_completed) && (
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                      {job.models_completed.map((modelName: string) => (
+                        <div key={modelName} className="text-center p-2 bg-muted rounded-md">
+                          <div className="text-sm font-semibold">{modelName}</div>
                         </div>
                       ))}
                     </div>

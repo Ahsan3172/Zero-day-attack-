@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { ModelResult } from '@/services/api';
+
+interface DebugModelResult extends ModelResult {
+  user_id?: number;
+  username?: string;
+  algorithm?: string;
+}
 
 interface DebugData {
-  all_results: any[];
+  all_results: DebugModelResult[];
   results_by_user: Array<{
     user_id: number;
     count: number;
@@ -12,7 +19,7 @@ interface DebugData {
 }
 
 interface AllResultsData {
-  results: any[];
+  results: DebugModelResult[];
   pagination: {
     page: number;
     limit: number;

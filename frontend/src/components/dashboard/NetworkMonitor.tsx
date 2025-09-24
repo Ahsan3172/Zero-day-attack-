@@ -138,7 +138,7 @@ const NetworkMonitor = () => {
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
-                      <Badge variant={getAlertBadge(alert.type) as any}>
+                      <Badge variant={getAlertBadge(alert.type) as "default" | "secondary" | "destructive" | "outline"}>
                         {alert.type.toUpperCase()}
                       </Badge>
                       <span className="text-xs text-muted-foreground">{alert.timestamp}</span>

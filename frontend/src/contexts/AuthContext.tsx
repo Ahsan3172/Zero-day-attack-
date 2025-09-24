@@ -110,12 +110,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         throw new Error(response.message || 'Login failed');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Login failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Invalid credentials. Please try again.';
       
       toast({
         title: "Login Failed",
-        description: error.message || 'Invalid credentials. Please try again.',
+        description: errorMessage,
         variant: "destructive"
       });
       
@@ -141,12 +142,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         throw new Error(response.message || 'Registration failed');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Registration failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create account. Please try again.';
       
       toast({
         title: "Registration Failed",
-        description: error.message || 'Failed to create account. Please try again.',
+        description: errorMessage,
         variant: "destructive"
       });
       
@@ -207,12 +209,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else {
         throw new Error(response.message || 'Update failed');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Profile update failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update profile. Please try again.';
       
       toast({
         title: "Update Failed",
-        description: error.message || 'Failed to update profile. Please try again.',
+        description: errorMessage,
         variant: "destructive"
       });
       

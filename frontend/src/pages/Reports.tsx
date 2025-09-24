@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import { Download, FileText, TrendingUp, AlertTriangle, Shield, Eye, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -74,7 +74,7 @@ const Reports = () => {
   };
 
   // Fetch model results from API
-  const fetchModelResults = async (page: number = 1) => {
+  const fetchModelResults = useCallback(async (page: number = 1) => {
     try {
       setLoading(true);
       const data: ApiResponse = await fetchWithAuth(
@@ -100,7 +100,7 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [pagination.limit]);
 
   // Download a specific result
   const handleDownloadResult = async (resultId: number, format: 'pdf' | 'json' = 'json') => {
@@ -164,7 +164,7 @@ const Reports = () => {
   };
 
   // Generate PDF report using HTML and print
-  const generatePDFReport = async (resultData: any, resultId: number) => {
+  const generatePDFReport = async (resultData: ModelResult, resultId: number) => {
     // Find the specific result for better data access
     const result = modelResults.find(r => r.id === resultId);
     if (!result) {
@@ -172,17 +172,21 @@ const Reports = () => {
     }
 
     // Helper functions for safe number conversion
-    const safeNumber = (value: any): number => {
-      const num = parseFloat(value);
-      return isNaN(num) ? 0 : num;
+    const safeNumber = (value: unknown): number => {
+      if (typeof value === 'number') return isNaN(value) ? 0 : value;
+      if (typeof value === 'string') {
+        const num = parseFloat(value);
+        return isNaN(num) ? 0 : num;
+      }
+      return 0;
     };
 
-    const safePercentage = (value: any): string => {
+    const safePercentage = (value: unknown): string => {
       const num = safeNumber(value);
       return (num * 100).toFixed(2);
     };
 
-    const safeExecutionTime = (value: any): string => {
+    const safeExecutionTime = (value: unknown): string => {
       const num = safeNumber(value);
       return num > 0 ? `${num.toFixed(2)} seconds` : 'N/A';
     };
@@ -497,7 +501,7 @@ const Reports = () => {
       console.log('Fetching model results for user:', user.username, user.id); // Debug log
       fetchModelResults(1);
     }
-  }, [user]);
+  }, [user, fetchModelResults]);
 
   // Format date for display
   const formatDate = (dateString: string) => {

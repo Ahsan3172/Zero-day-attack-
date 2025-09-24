@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,7 +30,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setRefreshing(true);
       const [statsData, threatsData] = await Promise.all([
@@ -51,13 +51,13 @@ const Dashboard = () => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [toast]);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
-  }, [user]);
+  }, [user, fetchDashboardData]);
 
   const handleRefresh = () => {
     fetchDashboardData();
@@ -110,14 +110,22 @@ const Dashboard = () => {
   const { user_stats, recent_tests, active_training, weekly_activity, system_stats } = dashboardData;
   
   // Helper functions for safe number conversion
-  const safeNumber = (value: any): number => {
-    const num = parseFloat(value);
-    return isNaN(num) ? 0 : num;
+  const safeNumber = (value: unknown): number => {
+    if (typeof value === 'number') return isNaN(value) ? 0 : value;
+    if (typeof value === 'string') {
+      const num = parseFloat(value);
+      return isNaN(num) ? 0 : num;
+    }
+    return 0;
   };
 
-  const safeInteger = (value: any): number => {
-    const num = parseInt(value);
-    return isNaN(num) ? 0 : num;
+  const safeInteger = (value: unknown): number => {
+    if (typeof value === 'number') return isNaN(value) ? 0 : Math.floor(value);
+    if (typeof value === 'string') {
+      const num = parseInt(value, 10);
+      return isNaN(num) ? 0 : num;
+    }
+    return 0;
   };
 
   // Convert values to numbers for calculations

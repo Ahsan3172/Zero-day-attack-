@@ -28,7 +28,7 @@ import { useAuth } from "@/contexts/AuthContext";
 interface MenuItem {
   title: string;
   url: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
   requiredRole?: 'admin' | 'user';
 }
 

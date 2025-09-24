@@ -3,14 +3,22 @@ import userEvent from '@testing-library/user-event';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Simple Button Component for testing
-const Button = ({ children, onClick, disabled = false }: any) => (
+const Button = ({ children, onClick, disabled = false }: {
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}) => (
   <button onClick={onClick} disabled={disabled} data-testid="button">
     {children}
   </button>
 );
 
 // Simple Input Component for testing
-const Input = ({ value, onChange, placeholder }: any) => (
+const Input = ({ value, onChange, placeholder }: {
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
+}) => (
   <input
     value={value}
     onChange={onChange}
@@ -43,7 +51,8 @@ describe('Button Component', () => {
 
 describe('Input Component', () => {
   it('should render input with placeholder', () => {
-    render(<Input placeholder="Enter text" />);
+    const handleChange = vi.fn();
+    render(<Input value="" onChange={handleChange} placeholder="Enter text" />);
     expect(screen.getByPlaceholderText('Enter text')).toBeInTheDocument();
   });
 

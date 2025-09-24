@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, AlertCircle, CheckCircle, FileText, BarChart3, Activity, History, ChevronDown, Clock, Database } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import type { ClassificationReport, ClassificationReportWithDataset, ModelResult, PredictionResults } from "@/types";
 
 interface ModelTestResults {
   success: boolean;
@@ -48,8 +49,8 @@ interface TestHistoryItem {
   recall_score: number;
   f1_score: number;
   confusion_matrix: number[][];
-  classification_report: any;
-  prediction_results: any;
+  classification_report: ClassificationReportWithDataset;
+  prediction_results: PredictionResults;
   execution_time: number;
   created_at: string;
 }
@@ -140,7 +141,7 @@ const TestModels = () => {
         
         if (data.success) {
           // Transform the API response to match the TestHistoryItem interface
-          const transformedHistory: TestHistoryItem[] = data.data.results.map((result: any) => ({
+          const transformedHistory: TestHistoryItem[] = data.data.results.map((result: ModelResult) => ({
             id: result.id,
             model_name: result.model_name,
             dataset_filename: result.dataset_name,
@@ -240,7 +241,7 @@ const TestModels = () => {
         try {
           const historyData = await fetchWithAuth("http://localhost:5000/api/models/results?limit=50");
           if (historyData.success) {
-            const transformedHistory: TestHistoryItem[] = historyData.data.results.map((result: any) => ({
+            const transformedHistory: TestHistoryItem[] = historyData.data.results.map((result: ModelResult) => ({
               id: result.id,
               model_name: result.model_name,
               dataset_filename: result.dataset_name,

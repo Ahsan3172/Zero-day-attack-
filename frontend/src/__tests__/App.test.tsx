@@ -7,9 +7,9 @@ vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
-    BrowserRouter: ({ children }: any) => <div data-testid="browser-router">{children}</div>,
-    Routes: ({ children }: any) => <div data-testid="routes">{children}</div>,
-    Route: ({ children }: any) => <div data-testid="route">{children}</div>,
+    BrowserRouter: ({ children }: { children: React.ReactNode }) => <div data-testid="browser-router">{children}</div>,
+    Routes: ({ children }: { children: React.ReactNode }) => <div data-testid="routes">{children}</div>,
+    Route: ({ children }: { children: React.ReactNode }) => <div data-testid="route">{children}</div>,
   };
 });
 
@@ -26,7 +26,7 @@ vi.mock('../services/api', () => ({
 
 // Mock contexts
 vi.mock('../contexts/AuthContext', () => ({
-  AuthProvider: ({ children }: any) => <div data-testid="auth-provider">{children}</div>,
+  AuthProvider: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-provider">{children}</div>,
   useAuth: () => ({
     user: null,
     login: vi.fn(),

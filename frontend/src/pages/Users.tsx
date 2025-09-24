@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Users as UsersIcon, Search, UserPlus, Shield, User, Clock, RefreshCw, Trash2, UserCog } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -39,13 +39,8 @@ const Users = () => {
     totalPages: 0
   });
 
-  // Double-check admin role at component level
-  if (currentUser?.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   // Load users data
-  const fetchUsers = async (refresh = false) => {
+  const fetchUsers = useCallback(async (refresh = false) => {
     try {
       if (refresh) setRefreshing(true);
       else setLoading(true);
@@ -53,23 +48,24 @@ const Users = () => {
       const response = await adminApi.getAllUsers(pagination.page, pagination.limit);
       
       if (response.success && response.data) {
-        setUsers(response.data.users);
+        setUsers(response.data.items);
         setPagination(response.data.pagination);
       } else {
         throw new Error(response.message || 'Failed to fetch users');
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error fetching users:', error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to load users";
       toast({
         title: "Error",
-        description: error.message || "Failed to load users",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [pagination.page, pagination.limit, toast]);
 
   // Load users on component mount and set up auto-refresh
   useEffect(() => {
@@ -82,7 +78,12 @@ const Users = () => {
 
     // Cleanup interval on component unmount
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchUsers]);
+
+  // Double-check admin role at component level
+  if (currentUser?.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   const filteredUsers = users.filter(user =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -121,10 +122,11 @@ const Users = () => {
       } else {
         throw new Error(response.message);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to approve user";
       toast({
         title: "Error",
-        description: error.message || "Failed to approve user",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -148,10 +150,11 @@ const Users = () => {
       } else {
         throw new Error(response.message);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to reject user";
       toast({
         title: "Error",
-        description: error.message || "Failed to reject user",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -179,10 +182,11 @@ const Users = () => {
       } else {
         throw new Error(response.message);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to delete user";
       toast({
         title: "Error",
-        description: error.message || "Failed to delete user",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -228,7 +232,7 @@ const Users = () => {
         );
         throw new Error(response.message);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       // Revert optimistic update on error
       setUsers(prevUsers => 
         prevUsers.map(user => 
@@ -238,9 +242,10 @@ const Users = () => {
         )
       );
       
+      const errorMessage = error instanceof Error ? error.message : "Failed to update user role";
       toast({
         title: "Error",
-        description: error.message || "Failed to update user role",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -280,10 +285,11 @@ const Users = () => {
       } else {
         throw new Error(response.message);
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to create user";
       toast({
         title: "Error",
-        description: error.message || "Failed to create user",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {

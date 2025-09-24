@@ -1,12 +1,30 @@
 // API Configuration and Service Layer
+import {
+  Pagination,
+  ClassificationReport,
+  ApiError,
+  ActivityLog,
+  TrainingLog,
+  PredictionResult,
+  ChartDataPoint,
+  SystemStats,
+  AuditLog,
+  ApiListResponse,
+  TrainingRequest,
+  TrainingStatus,
+  UserInvitation,
+  ModelTrainingData,
+  RoleUpdateResponse
+} from '../types';
+
 const API_BASE_URL = 'http://localhost:5000/api';
 
 // API Response Types
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   success: boolean;
   message: string;
   data?: T;
-  errors?: any[];
+  errors?: ApiError[];
 }
 
 export interface User {
@@ -57,7 +75,7 @@ export interface ModelResult {
   recall_score: number;
   f1_score: number;
   confusion_matrix: number[][];
-  classification_report: any;
+  classification_report: ClassificationReport;
   execution_time: number;
   created_at: string;
 }
@@ -138,14 +156,14 @@ class ApiClient {
     return this.request<T>(endpoint, { method: 'GET' });
   }
 
-  async post<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async post<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
     });
   }
 
-  async put<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+  async put<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
@@ -217,7 +235,7 @@ export const userApi = {
     return apiClient.put('/users/password', { currentPassword, newPassword });
   },
 
-  getActivity: async (): Promise<ApiResponse<any>> => {
+  getActivity: async (): Promise<ApiResponse<ActivityLog[]>> => {
     return apiClient.get('/users/activity');
   },
 };
@@ -228,7 +246,7 @@ export const datasetApi = {
     return apiClient.uploadFile<Dataset>('/datasets/upload', file);
   },
 
-  getAll: async (): Promise<ApiResponse<{ datasets: Dataset[], pagination: any }>> => {
+  getAll: async (): Promise<ApiResponse<ApiListResponse<Dataset>>> => {
     return apiClient.get('/datasets');
   },
 
@@ -273,15 +291,15 @@ export const datasetApi = {
 
 // Model API
 export const modelApi = {
-  getAll: async (): Promise<ApiResponse<{ models: Model[], pagination: any }>> => {
+  getAll: async (): Promise<ApiResponse<ApiListResponse<Model>>> => {
     return apiClient.get('/models');
   },
 
-  getById: async (id: number): Promise<ApiResponse<{ model: Model, recentResults: any[], trainingLogs: any[] }>> => {
+  getById: async (id: number): Promise<ApiResponse<{ model: Model, recentResults: PredictionResult[], trainingLogs: TrainingLog[] }>> => {
     return apiClient.get(`/models/${id}`);
   },
 
-  predict: async (modelId: number, datasetId: number): Promise<ApiResponse<any>> => {
+  predict: async (modelId: number, datasetId: number): Promise<ApiResponse<PredictionResult>> => {
     return apiClient.post(`/models/${modelId}/predict`, { datasetId });
   },
 
@@ -289,7 +307,7 @@ export const modelApi = {
     return apiClient.get(`/models/results/${resultId}`);
   },
 
-  getResults: async (): Promise<ApiResponse<{ results: ModelResult[], pagination: any }>> => {
+  getResults: async (): Promise<ApiResponse<ApiListResponse<ModelResult>>> => {
     return apiClient.get('/models/results');
   },
 
@@ -298,24 +316,11 @@ export const modelApi = {
   },
 
   // Training API
-  startTraining: async (trainingData: {
-    model_types: string[];
-    test_size?: number;
-    random_state?: number;
-    dataset_path?: string | null;
-  }): Promise<ApiResponse<{ task_id: string; status: string; model_types: string[]; dataset_path: string }>> => {
+  startTraining: async (trainingData: TrainingRequest): Promise<ApiResponse<{ task_id: string; status: string; model_types: string[]; dataset_path: string }>> => {
     return apiClient.post('/models/train', trainingData);
   },
 
-  getTrainingStatus: async (taskId: string): Promise<ApiResponse<{
-    task_id: string;
-    status: string;
-    progress: number;
-    message: string;
-    current_model?: string;
-    models_completed: string[];
-    error_details?: string;
-  }>> => {
+  getTrainingStatus: async (taskId: string): Promise<ApiResponse<TrainingStatus>> => {
     return apiClient.get(`/models/train/status/${taskId}`);
   },
 
@@ -326,23 +331,23 @@ export const modelApi = {
 
 // Dashboard API
 export const dashboardApi = {
-  getOverview: async (): Promise<ApiResponse<any>> => {
+  getOverview: async (): Promise<ApiResponse<SystemStats>> => {
     return apiClient.get('/dashboard/overview');
   },
 
-  getAccuracyTrend: async (days: number = 30): Promise<ApiResponse<any>> => {
+  getAccuracyTrend: async (days: number = 30): Promise<ApiResponse<ChartDataPoint[]>> => {
     return apiClient.get(`/dashboard/charts/accuracy-trend?days=${days}`);
   },
 
-  getModelPerformance: async (): Promise<ApiResponse<any>> => {
+  getModelPerformance: async (): Promise<ApiResponse<ChartDataPoint[]>> => {
     return apiClient.get('/dashboard/charts/model-performance');
   },
 
-  getAttackDistribution: async (): Promise<ApiResponse<any>> => {
+  getAttackDistribution: async (): Promise<ApiResponse<ChartDataPoint[]>> => {
     return apiClient.get('/dashboard/charts/attack-distribution');
   },
 
-  getRecentActivity: async (): Promise<ApiResponse<any>> => {
+  getRecentActivity: async (): Promise<ApiResponse<ActivityLog[]>> => {
     return apiClient.get('/dashboard/recent-activity');
   },
 };
@@ -361,7 +366,7 @@ export const adminApi = {
     return apiClient.put(`/admin/users/${userId}/reject`);
   },
 
-  getAllUsers: async (page: number = 1, limit: number = 10): Promise<ApiResponse<any>> => {
+  getAllUsers: async (page: number = 1, limit: number = 10): Promise<ApiResponse<ApiListResponse<User>>> => {
     return apiClient.get(`/admin/users?page=${page}&limit=${limit}`);
   },
 
@@ -369,39 +374,29 @@ export const adminApi = {
     return apiClient.delete(`/admin/users/${userId}`);
   },
 
-  inviteUser: async (userData: {
-    username: string;
-    email: string;
-    password: string;
-    role?: 'admin' | 'user';
-  }): Promise<ApiResponse<User>> => {
+  inviteUser: async (userData: UserInvitation): Promise<ApiResponse<User>> => {
     return apiClient.post('/admin/users/invite', userData);
   },
 
-  updateUserRole: async (userId: number, role: 'admin' | 'user'): Promise<ApiResponse<{ userId: number; newRole: string }>> => {
+  updateUserRole: async (userId: number, role: 'admin' | 'user'): Promise<ApiResponse<RoleUpdateResponse>> => {
     return apiClient.put(`/users/role/${userId}`, { role });
   },
 
-  trainModel: async (modelData: {
-    name: string;
-    description: string;
-    algorithm: string;
-    datasetId: number;
-  }): Promise<ApiResponse<any>> => {
+  trainModel: async (modelData: ModelTrainingData): Promise<ApiResponse<Model>> => {
     return apiClient.post('/admin/models/train', modelData);
   },
 
-  getSystemStats: async (): Promise<ApiResponse<any>> => {
+  getSystemStats: async (): Promise<ApiResponse<SystemStats>> => {
     return apiClient.get('/admin/system/stats');
   },
 
-  getAuditLogs: async (page: number = 1, limit: number = 20): Promise<ApiResponse<any>> => {
+  getAuditLogs: async (page: number = 1, limit: number = 20): Promise<ApiResponse<ApiListResponse<AuditLog>>> => {
     return apiClient.get(`/admin/logs?page=${page}&limit=${limit}`);
   },
 };
 
 // Helper function for authenticated requests
-export const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<any> => {
+export const fetchWithAuth = async (url: string, options: RequestInit = {}): Promise<unknown> => {
   const token = tokenManager.getToken();
   
   if (!token) {

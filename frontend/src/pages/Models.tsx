@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import { apiUrl } from "@/config/api";
 import { tokenManager } from "@/services/api";
+import type { ClassificationReport } from "@/types";
 
 interface Model {
   id: string | number;
@@ -23,7 +24,7 @@ interface Model {
     recall: number;
     f1_score: number;
     confusion_matrix?: number[][];
-    classification_report?: any;
+    classification_report?: ClassificationReport;
     feature_importance?: { [key: string]: number };
   };
   path?: string;
@@ -446,25 +447,32 @@ const Models = () => {
                       <tbody>
                         {Object.entries(selectedModel.performance.classification_report)
                           .filter(([key]) => !['accuracy', 'macro avg', 'weighted avg'].includes(key))
-                          .map(([className, metrics]: [string, any]) => (
-                            <tr key={className}>
-                              <td className="border border-border p-2 font-medium">
-                                {className === '0' ? 'Normal' : className === '1' ? 'Attack' : className}
-                              </td>
-                              <td className="border border-border p-2 text-center font-mono">
-                                {(metrics.precision * 100).toFixed(1)}%
-                              </td>
-                              <td className="border border-border p-2 text-center font-mono">
-                                {(metrics.recall * 100).toFixed(1)}%
-                              </td>
-                              <td className="border border-border p-2 text-center font-mono">
-                                {(metrics['f1-score'] * 100).toFixed(1)}%
-                              </td>
-                              <td className="border border-border p-2 text-center font-mono">
-                                {metrics.support?.toLocaleString()}
-                              </td>
-                            </tr>
-                          ))}
+                          .map(([className, metrics]: [string, unknown]) => {
+                            const isValidMetrics = typeof metrics === 'object' && metrics && 
+                                                  'precision' in metrics && 'recall' in metrics && 
+                                                  'f1-score' in metrics && 'support' in metrics;
+                            const typedMetrics = metrics as { precision: number; recall: number; 'f1-score': number; support: number };
+                            
+                            return (
+                              <tr key={className}>
+                                <td className="border border-border p-2 font-medium">
+                                  {className === '0' ? 'Normal' : className === '1' ? 'Attack' : className}
+                                </td>
+                                <td className="border border-border p-2 text-center font-mono">
+                                  {isValidMetrics ? (typedMetrics.precision * 100).toFixed(1) : '0.0'}%
+                                </td>
+                                <td className="border border-border p-2 text-center font-mono">
+                                  {isValidMetrics ? (typedMetrics.recall * 100).toFixed(1) : '0.0'}%
+                                </td>
+                                <td className="border border-border p-2 text-center font-mono">
+                                  {isValidMetrics ? (typedMetrics['f1-score'] * 100).toFixed(1) : '0.0'}%
+                                </td>
+                                <td className="border border-border p-2 text-center font-mono">
+                                  {isValidMetrics ? typedMetrics.support?.toLocaleString() : '0'}
+                                </td>
+                              </tr>
+                            );
+                          })}
                       </tbody>
                     </table>
                   </div>
