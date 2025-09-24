@@ -273,9 +273,11 @@ jobs:
     
     - name: Install k6
       run: |
-        curl -s https://packagecloud.io/install/repositories/k6/k6-deb/script.deb.sh | sudo bash
-        sudo apt-get update
-        sudo apt-get install k6
+        # Install k6 using direct binary download
+        wget -q https://github.com/grafana/k6/releases/download/v0.47.0/k6-v0.47.0-linux-amd64.tar.gz
+        tar -xzf k6-v0.47.0-linux-amd64.tar.gz
+        sudo mv k6-v0.47.0-linux-amd64/k6 /usr/local/bin/
+        k6 version
     
     - name: Create load test script
       run: |
