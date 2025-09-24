@@ -47,7 +47,7 @@ jobs:
       run: npm run build
     
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./frontend/coverage/lcov.info
         flags: frontend
@@ -62,7 +62,7 @@ jobs:
         CI: true
     
     - name: Upload E2E test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       if: failure()
       with:
         name: playwright-report
@@ -129,7 +129,7 @@ jobs:
         NODE_ENV: test
     
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./backend/coverage/lcov.info
         flags: backend
@@ -186,7 +186,7 @@ jobs:
       run: pytest -m security -v
     
     - name: Upload coverage reports
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./api/coverage.xml
         flags: api
@@ -337,7 +337,7 @@ jobs:
         tar -czf deployment.tar.gz frontend/dist backend api
     
     - name: Upload deployment artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: deployment-package
         path: deployment.tar.gz

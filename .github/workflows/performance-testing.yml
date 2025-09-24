@@ -184,7 +184,7 @@ jobs:
       continue-on-error: true
     
     - name: Upload Load Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: load-test-results
         path: |
@@ -262,7 +262,7 @@ jobs:
       continue-on-error: true
     
     - name: Upload Stress Test Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: stress-test-results
         path: |
@@ -361,7 +361,7 @@ jobs:
       continue-on-error: true
     
     - name: Upload Benchmark Results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: benchmark-results
         path: api/benchmark-results.json
