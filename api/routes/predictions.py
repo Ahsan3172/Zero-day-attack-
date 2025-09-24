@@ -592,13 +592,15 @@ async def predict_from_file(
         
         return response_formatter.success_response(
             data={
+                "predictions": result.get("predictions", []),
                 "predictions_summary": result["batch_summary"],
                 "risk_assessment": {
                     "risk_level": result["risk_level"],
                     "attack_percentage": result["attack_percentage"]
                 },
                 "results_file": results_file,
-                "total_predictions": len(result["predictions"])
+                "total_predictions": len(result.get("predictions", [])),
+                "model_used": model_type
             },
             message="File predictions completed successfully"
         )

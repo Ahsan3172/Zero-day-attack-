@@ -224,3 +224,88 @@ class MLPipelineManager:
     def model_exists(self, model_name: str) -> bool:
         """Check if a model exists"""
         return model_name in self.metadata
+
+    def train_random_forest(self, X, y, n_estimators=100, random_state=42):
+        """Train a Random Forest model"""
+        from sklearn.ensemble import RandomForestClassifier
+        model = RandomForestClassifier(n_estimators=n_estimators, random_state=random_state)
+        model.fit(X, y)
+        return model
+
+    def train_isolation_forest(self, X, contamination=0.1, random_state=42):
+        """Train an Isolation Forest model for anomaly detection"""
+        from sklearn.ensemble import IsolationForest
+        model = IsolationForest(contamination=contamination, random_state=random_state)
+        model.fit(X)
+        return model
+
+    def train_svm(self, X, y, kernel='rbf', random_state=42):
+        """Train an SVM model"""
+        from sklearn.svm import SVC
+        model = SVC(kernel=kernel, random_state=random_state, probability=True)
+        model.fit(X, y)
+        return model
+
+    def train_autoencoder(self, X, encoding_dim=32, epochs=50, batch_size=32):
+        """Train an autoencoder model"""
+        try:
+            import tensorflow as tf
+            from tensorflow.keras.models import Sequential
+            from tensorflow.keras.layers import Dense
+            
+            input_dim = X.shape[1]
+            
+            model = Sequential([
+                Dense(encoding_dim * 2, activation='relu', input_shape=(input_dim,)),
+                Dense(encoding_dim, activation='relu'),
+                Dense(encoding_dim * 2, activation='relu'),
+                Dense(input_dim, activation='sigmoid')
+            ])
+            
+            model.compile(optimizer='adam', loss='mse')
+            model.fit(X, X, epochs=epochs, batch_size=batch_size, verbose=0)
+            
+            return model
+        except ImportError:
+            logger.warning("TensorFlow not available, skipping autoencoder training")
+            return None
+
+    def evaluate_model(self, model, X_test, y_test):
+        """Evaluate a trained model"""
+        from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, classification_report
+        
+        y_pred = model.predict(X_test)
+        
+        metrics = {
+            "accuracy": accuracy_score(y_test, y_pred),
+            "precision": precision_score(y_test, y_pred, average='weighted', zero_division=0),
+            "recall": recall_score(y_test, y_pred, average='weighted', zero_division=0),
+            "f1_score": f1_score(y_test, y_pred, average='weighted', zero_division=0),
+            "classification_report": classification_report(y_test, y_pred, output_dict=True, zero_division=0)
+        }
+        
+        return metrics
+
+    def cross_validate(self, model, X, y, cv=5):
+        """Perform cross-validation on a model"""
+        from sklearn.model_selection import cross_val_score
+        import numpy as np
+        
+        # Adjust cv based on sample size and class distribution
+        n_samples = len(X)
+        unique_classes, class_counts = np.unique(y, return_counts=True)
+        min_class_count = min(class_counts)
+        
+        # For stratified CV, we need at least cv samples per class
+        max_cv = min(min_class_count, n_samples // 2)  # Conservative estimate
+        cv = min(cv, max_cv) if max_cv > 1 else 2  # Ensure at least 2-fold CV
+        
+        cv_scores = cross_val_score(model, X, y, cv=cv, scoring='accuracy')
+        
+        return {
+            "cv_scores": cv_scores.tolist(),
+            "mean_accuracy": cv_scores.mean(),
+            "std_accuracy": cv_scores.std(),
+            "mean_score": cv_scores.mean(),
+            "std_score": cv_scores.std()
+        }

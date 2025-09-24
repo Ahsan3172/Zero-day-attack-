@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Response
 from typing import List, Optional
 import logging
 from models.data_processor import DataProcessor
@@ -14,14 +14,15 @@ file_handler = FileHandler()
 response_formatter = ResponseFormatter()
 
 @router.post("/data/upload")
-async def upload_dataset(file: UploadFile = File(...)):
+async def upload_dataset(response: Response, file: UploadFile = File(...)):
     """Upload a dataset file for training or prediction"""
     try:
         # Validate file type
         if not file.filename.endswith(('.csv', '.CSV')):
-            raise HTTPException(
-                status_code=400, 
-                detail="Only CSV files are supported. Please upload a .csv file."
+            response.status_code = 400
+            return response_formatter.error_response(
+                message="Only CSV files are supported. Please upload a .csv file.",
+                status_code=400
             )
         
         # Validate file size (assuming a reasonable limit)
@@ -29,9 +30,10 @@ async def upload_dataset(file: UploadFile = File(...)):
         await file.seek(0)  # Reset file pointer
         
         if len(file_content) > 100 * 1024 * 1024:  # 100MB limit
-            raise HTTPException(
-                status_code=400,
-                detail="File size too large. Maximum size is 100MB."
+            response.status_code = 400
+            return response_formatter.error_response(
+                message="File size too large. Maximum size is 100MB.",
+                status_code=400
             )
         
         # Save the uploaded file
@@ -60,10 +62,25 @@ async def upload_dataset(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 @router.post("/data/validate")
-async def validate_dataset(file_path: str):
-    """Validate a dataset file"""
+async def validate_dataset(response: Response, data: dict):
+    """Validate dataset data"""
     try:
-        validation_result = data_processor.validate_dataset(file_path)
+        # Check if data is provided
+        if not data or 'data' not in data or not data['data']:
+            response.status_code = 400
+            return response_formatter.error_response(
+                message="Invalid data: data field is required and cannot be empty",
+                status_code=400
+            )
+        
+        # If file_path is provided, validate file
+        if 'file_path' in data:
+            validation_result = data_processor.validate_dataset(data['file_path'])
+        else:
+            # Validate data directly
+            import pandas as pd
+            df = pd.DataFrame(data['data'])
+            validation_result = data_processor._validate_dataframe(df)
         
         return response_formatter.success_response(
             data=validation_result,
@@ -72,7 +89,11 @@ async def validate_dataset(file_path: str):
         
     except Exception as e:
         logger.error(f"Error validating dataset: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        response.status_code = 500
+        return response_formatter.error_response(
+            message=f"Validation failed: {str(e)}",
+            status_code=500
+        )
 
 @router.post("/data/process")
 async def process_dataset(

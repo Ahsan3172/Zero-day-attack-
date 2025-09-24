@@ -23,7 +23,7 @@ class FileHandler:
         self.results_dir.mkdir(exist_ok=True)
         self.datasets_dir.mkdir(exist_ok=True)
     
-    def save_uploaded_file(self, source_path: str, filename: str) -> str:
+    def save_uploaded_file_sync(self, source_path: str, filename: str) -> str:
         """Save uploaded file synchronously for tests"""
         import shutil
         import time
@@ -45,7 +45,7 @@ class FileHandler:
             logger.error(f"Failed to save file: {e}")
             raise
     
-    def validate_csv_file(self, file_path: str) -> bool:
+    def validate_csv_file_simple(self, file_path: str) -> bool:
         """Validate CSV file for tests"""
         try:
             if not os.path.exists(file_path):
@@ -257,7 +257,7 @@ class FileHandler:
             logger.error(f"Error listing results: {e}")
             raise
     
-    def cleanup_old_files(self, days_old: int = 7):
+    def cleanup_old_files_detailed(self, days_old: int = 7):
         """Clean up old files older than specified days"""
         try:
             from datetime import timedelta

@@ -50,12 +50,17 @@ class ResponseFormatter:
         return response
     
     @staticmethod
-    def error_response(error: str, error_code: str = "GENERAL_ERROR", details: Optional[Dict] = None) -> Dict[str, Any]:
+    def error_response(message: str = None, error: str = None, error_code: str = "GENERAL_ERROR", status_code: int = 400, details: Optional[Dict] = None) -> Dict[str, Any]:
         """Format error response"""
+        # Support both message and error parameters for backwards compatibility
+        error_message = message or error or "An error occurred"
+        
         response = {
             "success": False,
-            "error": error,
+            "message": error_message,
+            "error": error_message,
             "error_code": error_code,
+            "status_code": status_code,
             "timestamp": datetime.now().isoformat()
         }
         

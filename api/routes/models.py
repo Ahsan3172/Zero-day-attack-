@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Response
 from typing import List, Optional, Dict, Any
 import logging
 import os
@@ -325,7 +325,7 @@ async def list_models():
         return response_formatter.error_response("Failed to list models", 500)
 
 @router.get("/models/info/{model_id}")
-async def get_model_info(model_id: str):
+async def get_model_info(model_id: str, response: Response):
     """Get detailed information about a specific model"""
     try:
         models_info = {
@@ -356,7 +356,11 @@ async def get_model_info(model_id: str):
         }
         
         if model_id not in models_info:
-            raise HTTPException(status_code=404, detail="Model not found")
+            response.status_code = 404
+            return response_formatter.error_response(
+                message="Model not found",
+                status_code=404
+            )
         
         return response_formatter.success_response(
             data={"model_info": models_info[model_id]},
@@ -364,4 +368,7 @@ async def get_model_info(model_id: str):
         )
     except Exception as e:
         logger.error(f"Error getting model info: {e}")
-        return response_formatter.error_response("Failed to get model info", 500)
+        return response_formatter.error_response(
+            message="Failed to get model info",
+            status_code=500
+        )

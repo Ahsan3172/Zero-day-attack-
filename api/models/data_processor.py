@@ -243,3 +243,176 @@ class DataProcessor:
         except Exception as e:
             logger.error(f"Error processing dataset: {e}")
             raise
+
+    def load_data(self, file_path: str) -> pd.DataFrame:
+        """Load data from CSV file"""
+        try:
+            return pd.read_csv(file_path)
+        except Exception as e:
+            logger.error(f"Error loading data: {e}")
+            raise
+
+    def handle_missing_values(self, df: pd.DataFrame, strategy: str = "median") -> pd.DataFrame:
+        """Handle missing values in the dataset"""
+        try:
+            df_copy = df.copy()
+            
+            # Handle numeric columns
+            numeric_cols = df_copy.select_dtypes(include=[np.number]).columns
+            if strategy == "median":
+                df_copy[numeric_cols] = df_copy[numeric_cols].fillna(df_copy[numeric_cols].median())
+            elif strategy == "mean":
+                df_copy[numeric_cols] = df_copy[numeric_cols].fillna(df_copy[numeric_cols].mean())
+            elif strategy == "drop":
+                df_copy = df_copy.dropna(subset=numeric_cols)
+            
+            # Handle categorical columns
+            categorical_cols = df_copy.select_dtypes(include=['object']).columns
+            df_copy[categorical_cols] = df_copy[categorical_cols].fillna('Unknown')
+            
+            return df_copy
+        except Exception as e:
+            logger.error(f"Error handling missing values: {e}")
+            raise
+
+    def normalize_features(self, df: pd.DataFrame) -> pd.DataFrame:
+        """Normalize features using StandardScaler"""
+        try:
+            df_copy = df.copy()
+            numeric_cols = df_copy.select_dtypes(include=[np.number]).columns
+            
+            # Handle missing values first
+            df_copy[numeric_cols] = df_copy[numeric_cols].fillna(df_copy[numeric_cols].mean())
+            
+            scaler = StandardScaler()
+            df_copy[numeric_cols] = scaler.fit_transform(df_copy[numeric_cols])
+            
+            return df_copy
+        except Exception as e:
+            logger.error(f"Error normalizing features: {e}")
+            raise
+
+    def detect_outliers(self, df: pd.DataFrame, method: str = "iqr") -> np.ndarray:
+        """Detect outliers in the dataset - returns boolean mask"""
+        try:
+            numeric_cols = df.select_dtypes(include=[np.number]).columns
+            outlier_mask = np.zeros(len(df), dtype=bool)
+            
+            for col in numeric_cols:
+                if method == "iqr":
+                    Q1 = df[col].quantile(0.25)
+                    Q3 = df[col].quantile(0.75)
+                    IQR = Q3 - Q1
+                    lower_bound = Q1 - 1.5 * IQR
+                    upper_bound = Q3 + 1.5 * IQR
+                    col_outliers = (df[col] < lower_bound) | (df[col] > upper_bound)
+                    outlier_mask |= col_outliers.fillna(False).values
+                elif method == "zscore":
+                    z_scores = np.abs(zscore(df[col].fillna(df[col].mean())))
+                    col_outliers = z_scores > 3
+                    outlier_mask |= col_outliers
+            
+            return outlier_mask
+        except Exception as e:
+            logger.error(f"Error detecting outliers: {e}")
+            raise
+
+    def feature_selection(self, df: pd.DataFrame, target_col: str = "Label", n_features: int = 10):
+        """Select top features based on correlation with target"""
+        try:
+            if target_col not in df.columns:
+                logger.warning(f"Target column {target_col} not found, returning feature names")
+                return [col for col in df.columns if col != target_col][:n_features]
+            
+            numeric_cols = df.select_dtypes(include=[np.number]).columns
+            correlation_matrix = df[numeric_cols].corr()
+            
+            if target_col in correlation_matrix.columns:
+                feature_scores = abs(correlation_matrix[target_col]).sort_values(ascending=False)
+                top_features = feature_scores.head(n_features).index.tolist()
+                
+                # Remove target column from feature list if present
+                if target_col in top_features:
+                    top_features.remove(target_col)
+                
+                return top_features
+            else:
+                return [col for col in df.columns if col != target_col][:n_features]
+        except Exception as e:
+            logger.error(f"Error in feature selection: {e}")
+            raise
+
+    def check_data_quality(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """Check data quality metrics"""
+        try:
+            quality_metrics = {
+                "shape": df.shape,
+                "missing_values": df.isnull().sum().to_dict(),
+                "missing_percentage": (df.isnull().sum() / len(df) * 100).to_dict(),
+                "duplicate_rows": df.duplicated().sum(),
+                "data_types": {col: str(dtype) for col, dtype in df.dtypes.to_dict().items()},
+                "numeric_columns": df.select_dtypes(include=[np.number]).columns.tolist(),
+                "categorical_columns": df.select_dtypes(include=['object']).columns.tolist(),
+                "constant_columns": [col for col in df.columns if df[col].nunique() <= 1],
+                "high_cardinality_columns": [col for col in df.select_dtypes(include=['object']).columns 
+                                           if df[col].nunique() > 50]
+            }
+            
+            # Add data quality score
+            total_cells = df.shape[0] * df.shape[1]
+            missing_cells = df.isnull().sum().sum()
+            quality_score = ((total_cells - missing_cells) / total_cells) * 100
+            quality_metrics["quality_score"] = round(quality_score, 2)
+            
+            # Add duplicate percentage
+            duplicate_count = df.duplicated().sum()
+            duplicate_percentage = (duplicate_count / len(df)) * 100 if len(df) > 0 else 0
+            quality_metrics["duplicate_percentage"] = round(duplicate_percentage, 2)
+            
+            return quality_metrics
+        except Exception as e:
+            logger.error(f"Error checking data quality: {e}")
+            raise
+
+    def detect_data_drift(self, reference_data: pd.DataFrame, current_data: pd.DataFrame) -> Dict[str, Any]:
+        """Detect data drift between reference and current datasets"""
+        try:
+            from scipy.stats import ks_2samp
+            
+            drift_results = {
+                "overall_drift": False,
+                "feature_drift": {},
+                "drift_score": 0.0,
+                "threshold": 0.05
+            }
+            
+            common_columns = set(reference_data.columns).intersection(set(current_data.columns))
+            numeric_columns = reference_data[list(common_columns)].select_dtypes(include=[np.number]).columns
+            
+            drift_detected = []
+            
+            for col in numeric_columns:
+                if col in current_data.columns:
+                    # Kolmogorov-Smirnov test
+                    stat, p_value = ks_2samp(reference_data[col].dropna(), current_data[col].dropna())
+                    
+                    drift_results["feature_drift"][col] = {
+                        "statistic": stat,
+                        "p_value": p_value,
+                        "drift_detected": p_value < drift_results["threshold"]
+                    }
+                    
+                    if p_value < drift_results["threshold"]:
+                        drift_detected.append(col)
+            
+            drift_results["drift_detected"] = len(drift_detected) > 0  # Add for test compatibility
+            drift_results["overall_drift"] = len(drift_detected) > 0
+            drift_results["drift_score"] = len(drift_detected) / len(numeric_columns) if len(numeric_columns) > 0 else 0
+            drift_results["drift_scores"] = {col: drift_results["feature_drift"][col]["statistic"] for col in drift_results["feature_drift"]}  # Add for test compatibility
+            drift_results["drifted_features"] = drift_detected
+            drift_results["drift_detected"] = len(drift_detected) > 0
+            
+            return drift_results
+        except Exception as e:
+            logger.error(f"Error detecting data drift: {e}")
+            raise
