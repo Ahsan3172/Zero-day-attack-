@@ -55,7 +55,7 @@ class TestDataProcessing:
     def test_upload_dataset_success(self, sample_csv_file):
         with open(sample_csv_file, 'rb') as f:
             response = client.post(
-                "/data/upload",
+                "/api/v1/data/upload",
                 files={"file": ("test.csv", f, "text/csv")}
             )
         assert response.status_code == 200
@@ -66,7 +66,7 @@ class TestDataProcessing:
     def test_upload_invalid_file_format(self):
         # Test with non-CSV file
         response = client.post(
-            "/data/upload",
+            "/api/v1/data/upload",
             files={"file": ("test.txt", b"not a csv file", "text/plain")}
         )
         assert response.status_code == 400
@@ -78,7 +78,7 @@ class TestDataProcessing:
         # First upload a file
         with open(sample_csv_file, 'rb') as f:
             upload_response = client.post(
-                "/data/upload",
+                "/api/v1/data/upload",
                 files={"file": ("test.csv", f, "text/csv")}
             )
         
@@ -86,7 +86,7 @@ class TestDataProcessing:
         
         # Then preprocess it
         response = client.post(
-            "/data/preprocess",
+            "/api/v1/data/preprocess",
             json={"filename": filename, "preprocessing_options": {"normalize": True}}
         )
         assert response.status_code == 200
@@ -96,7 +96,7 @@ class TestDataProcessing:
     def test_data_validation(self):
         # Test data validation with invalid data
         response = client.post(
-            "/data/validate",
+            "/api/v1/data/validate",
             json={"data": []}  # Empty data should be invalid
         )
         assert response.status_code == 400
@@ -105,7 +105,7 @@ class TestModelEndpoints:
     """Test ML model endpoints"""
     
     def test_list_models(self):
-        response = client.get("/models/list")
+        response = client.get("/api/v1/models")
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
@@ -113,14 +113,14 @@ class TestModelEndpoints:
         assert len(data["data"]["models"]) > 0
     
     def test_model_info(self):
-        response = client.get("/models/info/random_forest")
+        response = client.get("/api/v1/models/info/random_forest")
         assert response.status_code == 200
         data = response.json()
         assert data["success"] is True
         assert "model_info" in data["data"]
     
     def test_invalid_model_info(self):
-        response = client.get("/models/info/invalid_model")
+        response = client.get("/api/v1/models/info/invalid_model")
         assert response.status_code == 404
         data = response.json()
         assert data["success"] is False
@@ -140,7 +140,7 @@ class TestTrainingEndpoints:
         
         with open(sample_csv_file, 'rb') as f:
             response = client.post(
-                "/training/train",
+                "/api/v1/train",
                 data={"model_type": "random_forest"},
                 files={"file": ("train.csv", f, "text/csv")}
             )
@@ -152,7 +152,7 @@ class TestTrainingEndpoints:
     
     def test_train_without_file(self):
         response = client.post(
-            "/training/train",
+            "/api/v1/train",
             data={"model_type": "random_forest"}
         )
         assert response.status_code == 400
@@ -162,7 +162,7 @@ class TestTrainingEndpoints:
     def test_invalid_model_type(self, sample_csv_file):
         with open(sample_csv_file, 'rb') as f:
             response = client.post(
-                "/training/train",
+                "/api/v1/train",
                 data={"model_type": "invalid_model"},
                 files={"file": ("train.csv", f, "text/csv")}
             )
@@ -182,7 +182,7 @@ class TestPredictionEndpoints:
         
         with open(sample_csv_file, 'rb') as f:
             response = client.post(
-                "/predictions/predict",
+                "/api/v1/predict/file",
                 data={"model": "random_forest"},
                 files={"file": ("predict.csv", f, "text/csv")}
             )
@@ -206,7 +206,7 @@ class TestPredictionEndpoints:
                 "confidence": "high"
             }
             
-            response = client.post("/predictions/predict-single", json=sample_features)
+            response = client.post("/api/v1/predict/single", json=sample_features)
             assert response.status_code == 200
             data = response.json()
             assert data["success"] is True
@@ -218,7 +218,7 @@ class TestPredictionEndpoints:
             "model": "random_forest"
         }
         
-        response = client.post("/predictions/predict-single", json=invalid_features)
+        response = client.post("/api/v1/predict/single", json=invalid_features)
         assert response.status_code == 400
         data = response.json()
         assert data["success"] is False
@@ -257,7 +257,7 @@ class TestDataValidation:
         data_dict = sample_data.to_dict(orient='records')
         
         response = client.post(
-            "/data/quality-check",
+            "/api/v1/data/quality-check",
             json={"data": data_dict}
         )
         
@@ -270,7 +270,7 @@ class TestDataValidation:
         data_dict = sample_data.to_dict(orient='records')
         
         response = client.post(
-            "/data/detect-anomalies",
+            "/api/v1/data/detect-anomalies",
             json={"data": data_dict}
         )
         
@@ -299,7 +299,7 @@ class TestSecurityEndpoints:
             "model": "random_forest"
         }
         
-        response = client.post("/predictions/predict-single", json=malicious_input)
+        response = client.post("/api/v1/predict/single", json=malicious_input)
         # Should handle malicious input gracefully
         assert response.status_code in [400, 422]  # Bad request or validation error
 

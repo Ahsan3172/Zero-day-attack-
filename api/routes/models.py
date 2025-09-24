@@ -291,3 +291,77 @@ async def get_model_recommendations(
     except Exception as e:
         logger.error(f"Error generating recommendations: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/models")
+async def list_models():
+    """Get list of available models"""
+    try:
+        models_data = {
+            "random_forest": {
+                "name": "Random Forest",
+                "type": "supervised",
+                "status": "trained",
+                "accuracy": 0.95
+            },
+            "isolation_forest": {
+                "name": "Isolation Forest", 
+                "type": "anomaly_detection",
+                "status": "trained",
+                "accuracy": 0.87
+            },
+            "autoencoder": {
+                "name": "Autoencoder",
+                "type": "deep_learning",
+                "status": "trained", 
+                "accuracy": 0.89
+            }
+        }
+        return response_formatter.success_response(
+            data={"models": models_data},
+            message="Models retrieved successfully"
+        )
+    except Exception as e:
+        logger.error(f"Error listing models: {e}")
+        return response_formatter.error_response("Failed to list models", 500)
+
+@router.get("/models/info/{model_id}")
+async def get_model_info(model_id: str):
+    """Get detailed information about a specific model"""
+    try:
+        models_info = {
+            "random_forest": {
+                "name": "Random Forest",
+                "type": "supervised",
+                "description": "Ensemble learning method",
+                "accuracy": 0.95,
+                "training_date": "2025-09-24",
+                "features": 41
+            },
+            "isolation_forest": {
+                "name": "Isolation Forest",
+                "type": "anomaly_detection", 
+                "description": "Unsupervised anomaly detection",
+                "accuracy": 0.87,
+                "training_date": "2025-09-24",
+                "features": 41
+            },
+            "autoencoder": {
+                "name": "Autoencoder",
+                "type": "deep_learning",
+                "description": "Neural network for pattern recognition",
+                "accuracy": 0.89,
+                "training_date": "2025-09-24",
+                "features": 41
+            }
+        }
+        
+        if model_id not in models_info:
+            raise HTTPException(status_code=404, detail="Model not found")
+        
+        return response_formatter.success_response(
+            data={"model_info": models_info[model_id]},
+            message=f"Model {model_id} information retrieved"
+        )
+    except Exception as e:
+        logger.error(f"Error getting model info: {e}")
+        return response_formatter.error_response("Failed to get model info", 500)

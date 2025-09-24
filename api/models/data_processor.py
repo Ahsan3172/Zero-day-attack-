@@ -28,7 +28,7 @@ class DataProcessor:
                 "shape": df.shape,
                 "columns": list(df.columns),
                 "missing_values": df.isnull().sum().to_dict(),
-                "data_types": df.dtypes.to_dict(),
+                "data_types": {col: str(dtype) for col, dtype in df.dtypes.to_dict().items()},
                 "issues": []
             }
             

@@ -6,7 +6,7 @@ import tempfile
 import os
 
 from models.data_processor import DataProcessor
-from models.ml_pipeline import MLPipeline
+from models.ml_pipeline import MLPipelineManager
 from models.model_trainer import ModelTrainer
 from models.predictor import Predictor
 
@@ -64,7 +64,7 @@ class TestMLPipeline:
     
     @pytest.fixture
     def pipeline(self):
-        return MLPipeline()
+        return MLPipelineManager()
     
     @pytest.fixture
     def sample_features(self):

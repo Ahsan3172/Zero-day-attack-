@@ -52,7 +52,7 @@ async def train_model_simple(model_name: str = Form(...), file: UploadFile = Fil
             )
         
         # Save uploaded file
-        file_path = file_handler.save_uploaded_file(file, "datasets")
+        file_path = await file_handler.save_uploaded_file(file)
         
         # Load dataset
         logger.info(f"Loading dataset from {file_path}")

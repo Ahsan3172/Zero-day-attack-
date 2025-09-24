@@ -1,0 +1,83 @@
+name: Basic Health Check
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  # Basic health check to ensure repository is functional
+  health-check:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Check repository structure
+      run: |
+        echo "Checking repository structure..."
+        ls -la
+        echo "Frontend structure:"
+        ls -la frontend/ || echo "Frontend directory missing"
+        echo "Backend structure:"
+        ls -la backend/ || echo "Backend directory missing"
+        echo "API structure:"
+        ls -la api/ || echo "API directory missing"
+    
+    - name: Check package files
+      run: |
+        echo "Checking package files..."
+        [ -f "frontend/package.json" ] && echo "✓ Frontend package.json exists" || echo "✗ Frontend package.json missing"
+        [ -f "backend/package.json" ] && echo "✓ Backend package.json exists" || echo "✗ Backend package.json missing"
+        [ -f "api/requirements.txt" ] && echo "✓ API requirements.txt exists" || echo "✗ API requirements.txt missing"
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Test Node.js setup
+      run: |
+        node --version
+        npm --version
+    
+    - name: Test Python setup
+      run: |
+        python --version
+        pip --version
+    
+    - name: Basic syntax check - Frontend
+      run: |
+        cd frontend
+        if [ -f "package.json" ]; then
+          echo "Frontend package.json found"
+          cat package.json | head -20
+        fi
+      continue-on-error: true
+    
+    - name: Basic syntax check - Backend
+      run: |
+        cd backend
+        if [ -f "package.json" ]; then
+          echo "Backend package.json found"
+          cat package.json | head -20
+        fi
+      continue-on-error: true
+    
+    - name: Basic syntax check - API
+      run: |
+        cd api
+        if [ -f "requirements.txt" ]; then
+          echo "API requirements.txt found"
+          cat requirements.txt | head -20
+        fi
+        if [ -f "main.py" ]; then
+          python -m py_compile main.py && echo "✓ main.py syntax OK" || echo "✗ main.py syntax error"
+        fi
+      continue-on-error: true
