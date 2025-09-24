@@ -4,3 +4,5 @@ saved_models/
 uploads/
 *.log
 logs/
+.pytest_cache/
+.hypothesis/

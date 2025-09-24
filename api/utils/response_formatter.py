@@ -7,6 +7,33 @@ logger = logging.getLogger(__name__)
 class ResponseFormatter:
     """Formats API responses consistently"""
     
+    def success(self, data: Any = None, message: str = "Success") -> Dict[str, Any]:
+        """Format successful response for tests"""
+        return {
+            "success": True,
+            "message": message,
+            "data": data,
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    def error(self, message: str, status_code: int = 400) -> Dict[str, Any]:
+        """Format error response for tests"""
+        return {
+            "success": False,
+            "message": message,
+            "status_code": status_code,
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    def validation_error(self, errors: list) -> Dict[str, Any]:
+        """Format validation error response for tests"""
+        return {
+            "success": False,
+            "message": "Validation failed",
+            "errors": errors,
+            "timestamp": datetime.now().isoformat()
+        }
+    
     @staticmethod
     def success_response(data: Any = None, message: str = "Success", metadata: Optional[Dict] = None) -> Dict[str, Any]:
         """Format successful response"""

@@ -27,7 +27,14 @@ class Config:
     
     # File Settings
     MAX_FILE_SIZE_MB = int(os.getenv("MAX_FILE_SIZE_MB", 100))
+    MAX_FILE_SIZE = MAX_FILE_SIZE_MB * 1024 * 1024  # Convert to bytes for tests
     UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", "uploads"))
+    UPLOAD_DIRECTORY = str(UPLOAD_DIR)  # String version for tests
+    FILE_RETENTION_DAYS = int(os.getenv("FILE_RETENTION_DAYS", 30))
+    
+    # Database Settings (for tests)
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./test.db")
+    SECRET_KEY = os.getenv("SECRET_KEY", "test-secret-key-for-development")
     RESULTS_DIR = Path(os.getenv("RESULTS_DIR", "results"))
     MODELS_DIR = Path(os.getenv("MODELS_DIR", "saved_models"))
     

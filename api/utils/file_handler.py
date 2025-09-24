@@ -23,6 +23,104 @@ class FileHandler:
         self.results_dir.mkdir(exist_ok=True)
         self.datasets_dir.mkdir(exist_ok=True)
     
+    def save_uploaded_file(self, source_path: str, filename: str) -> str:
+        """Save uploaded file synchronously for tests"""
+        import shutil
+        import time
+        
+        try:
+            # Generate unique filename with timestamp
+            timestamp = int(time.time())
+            name, ext = os.path.splitext(filename)
+            new_filename = f"{timestamp}_{name}{ext}"
+            destination_path = self.upload_dir / new_filename
+            
+            # Copy file to upload directory
+            shutil.copy2(source_path, destination_path)
+            
+            logger.info(f"File saved successfully: {destination_path}")
+            return str(destination_path)
+            
+        except Exception as e:
+            logger.error(f"Failed to save file: {e}")
+            raise
+    
+    def validate_csv_file(self, file_path: str) -> bool:
+        """Validate CSV file for tests"""
+        try:
+            if not os.path.exists(file_path):
+                return False
+            
+            # Try to read the CSV
+            df = pd.read_csv(file_path)
+            
+            # Basic validation - must have at least 2 columns and consistent row lengths
+            if len(df.columns) < 2:
+                return False
+            
+            # Check if all rows have consistent number of values
+            with open(file_path, 'r') as f:
+                lines = f.readlines()
+                if len(lines) < 2:  # Header + at least one data row
+                    return False
+                
+                # Check row consistency
+                header_cols = len(lines[0].split(','))
+                for line in lines[1:]:
+                    if line.strip() and len(line.split(',')) != header_cols:
+                        return False
+            
+            return True
+            
+        except Exception as e:
+            logger.error(f"CSV validation error: {e}")
+            return False
+    
+    def validate_file_size(self, file_path: str) -> bool:
+        """Validate file size for tests"""
+        try:
+            if not os.path.exists(file_path):
+                return False
+            
+            from config import Config
+            file_size = os.path.getsize(file_path)
+            max_size = getattr(Config, 'MAX_FILE_SIZE_MB', 100) * 1024 * 1024  # Convert MB to bytes
+            
+            return file_size <= max_size
+            
+        except Exception as e:
+            logger.error(f"File size validation error: {e}")
+            return False
+    
+    def cleanup_old_files(self) -> int:
+        """Clean up old files for tests"""
+        import time
+        
+        try:
+            from config import Config
+            retention_days = getattr(Config, 'FILE_RETENTION_DAYS', 30)
+            
+            current_time = time.time()
+            max_age_seconds = retention_days * 24 * 3600
+            cleaned_count = 0
+            
+            for file_path in self.upload_dir.iterdir():
+                if file_path.is_file():
+                    file_age = current_time - file_path.stat().st_mtime
+                    if file_age > max_age_seconds:
+                        try:
+                            file_path.unlink()
+                            cleaned_count += 1
+                            logger.info(f"Cleaned up old file: {file_path}")
+                        except Exception as e:
+                            logger.error(f"Failed to delete old file {file_path}: {e}")
+            
+            return cleaned_count
+            
+        except Exception as e:
+            logger.error(f"Cleanup error: {e}")
+            return 0
+    
     async def save_uploaded_file(self, file: UploadFile) -> str:
         """Save uploaded file and return file path"""
         try:

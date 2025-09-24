@@ -1,0 +1,121 @@
+version: '3.8'
+
+services:
+  # Test Database
+  test-mysql:
+    image: mysql:8.0
+    container_name: zda-test-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: testpassword
+      MYSQL_DATABASE: test_db
+      MYSQL_USER: test_user
+      MYSQL_PASSWORD: test_password
+    ports:
+      - "3307:3306"
+    tmpfs:
+      - /var/lib/mysql
+    networks:
+      - test-network
+
+  # Test Redis
+  test-redis:
+    image: redis:7-alpine
+    container_name: zda-test-redis
+    ports:
+      - "6380:6379"
+    networks:
+      - test-network
+
+  # API for Testing
+  test-api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: zda-test-api
+    environment:
+      - TESTING=true
+      - DATABASE_URL=mysql://test_user:test_password@test-mysql:3306/test_db
+      - REDIS_URL=redis://test-redis:6379
+      - SECRET_KEY=test-secret-key
+      - LOG_LEVEL=DEBUG
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./api:/app
+      - /app/node_modules
+    depends_on:
+      - test-mysql
+      - test-redis
+    networks:
+      - test-network
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  # Backend for Testing
+  test-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: zda-test-backend
+    environment:
+      - NODE_ENV=test
+      - DB_HOST=test-mysql
+      - DB_PORT=3306
+      - DB_NAME=test_db
+      - DB_USER=test_user
+      - DB_PASSWORD=test_password
+      - JWT_SECRET=test-jwt-secret
+      - ML_API_URL=http://test-api:8000
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - test-mysql
+      - test-api
+    networks:
+      - test-network
+    command: ["npm", "run", "dev"]
+
+  # Frontend for Testing
+  test-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: zda-test-frontend
+    environment:
+      - VITE_API_URL=http://localhost:5001
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - test-backend
+    networks:
+      - test-network
+
+  # Test Runner
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    container_name: zda-test-runner
+    volumes:
+      - .:/workspace
+      - /workspace/node_modules
+    environment:
+      - API_URL=http://test-api:8000
+      - BACKEND_URL=http://test-backend:5000
+      - FRONTEND_URL=http://test-frontend:3000
+    depends_on:
+      - test-api
+      - test-backend
+      - test-frontend
+    networks:
+      - test-network
+    command: ["./run-tests.sh"]
+
+networks:
+  test-network:
+    driver: bridge

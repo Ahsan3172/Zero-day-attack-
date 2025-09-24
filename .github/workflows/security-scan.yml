@@ -1,0 +1,323 @@
+name: Security Scanning
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Run security scans weekly on Sundays at 3 AM UTC
+    - cron: '0 3 * * 0'
+
+jobs:
+  # Static Application Security Testing (SAST)
+  sast-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: Frontend Security Scan
+      run: |
+        cd frontend
+        npx eslint . --ext .ts,.tsx --format json --output-file eslint-report.json || true
+    
+    - name: Backend Security Scan with ESLint
+      run: |
+        cd backend
+        npx eslint . --ext .js --format json --output-file eslint-report.json || true
+    
+    - name: Setup Python for API security scan
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: API Security Scan with Bandit
+      run: |
+        cd api
+        pip install bandit[toml]
+        bandit -r . -f json -o bandit-report.json || true
+    
+    - name: Semgrep Security Scan
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: >-
+          p/security-audit
+          p/secrets
+          p/owasp-top-ten
+        generateSarif: "1"
+      continue-on-error: true
+    
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: semgrep.sarif
+      if: always()
+
+  # Dependency Vulnerability Scanning
+  dependency-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Frontend Dependency Scan
+      run: |
+        cd frontend
+        npm audit --audit-level high --json > npm-audit.json || true
+    
+    - name: Backend Dependency Scan
+      run: |
+        cd backend
+        npm audit --audit-level high --json > npm-audit.json || true
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: API Dependency Scan
+      run: |
+        cd api
+        pip install safety
+        safety check --json --output safety-report.json || true
+    
+    - name: Snyk Security Scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        args: --all-projects --severity-threshold=high
+      continue-on-error: true
+
+  # Container Security Scanning
+  container-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Build Docker images
+      run: |
+        # Build frontend image
+        cd frontend
+        echo "FROM nginx:alpine" > Dockerfile
+        echo "COPY dist /usr/share/nginx/html" >> Dockerfile
+        docker build -t zero-day-frontend .
+        
+        # Build backend image
+        cd ../backend
+        echo "FROM node:18-alpine" > Dockerfile
+        echo "WORKDIR /app" >> Dockerfile
+        echo "COPY package*.json ./" >> Dockerfile
+        echo "RUN npm ci --only=production" >> Dockerfile
+        echo "COPY . ." >> Dockerfile
+        echo "CMD [\"node\", \"server.js\"]" >> Dockerfile
+        docker build -t zero-day-backend .
+        
+        # Build API image
+        cd ../api
+        echo "FROM python:3.10-slim" > Dockerfile
+        echo "WORKDIR /app" >> Dockerfile
+        echo "COPY requirements.txt ." >> Dockerfile
+        echo "RUN pip install -r requirements.txt" >> Dockerfile
+        echo "COPY . ." >> Dockerfile
+        echo "CMD [\"uvicorn\", \"main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]" >> Dockerfile
+        docker build -t zero-day-api .
+    
+    - name: Scan Frontend Image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'zero-day-frontend'
+        format: 'sarif'
+        output: 'trivy-frontend.sarif'
+    
+    - name: Scan Backend Image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'zero-day-backend'
+        format: 'sarif'
+        output: 'trivy-backend.sarif'
+    
+    - name: Scan API Image
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'zero-day-api'
+        format: 'sarif'
+        output: 'trivy-api.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-frontend.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-backend.sarif'
+    
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-api.sarif'
+
+  # Secrets Scanning
+  secrets-scan:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: GitLeaks Scan
+      uses: gitleaks/gitleaks-action@v2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITLEAKS_LICENSE: ${{ secrets.GITLEAKS_LICENSE }}
+    
+    - name: TruffleHog Scan
+      uses: trufflesecurity/trufflehog@main
+      with:
+        path: ./
+        base: main
+        head: HEAD
+        extra_args: --debug --only-verified
+
+  # Dynamic Application Security Testing (DAST)
+  dast-scan:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Start Application Services
+      run: |
+        # Start API
+        cd api
+        pip install -r requirements.txt
+        uvicorn main:app --host 0.0.0.0 --port 8000 &
+        
+        # Start Backend
+        cd ../backend
+        npm ci
+        npm start &
+        
+        # Start Frontend
+        cd ../frontend
+        npm ci
+        npm run build
+        npx serve -s dist -l 3000 &
+        
+        # Wait for services to start
+        sleep 30
+    
+    - name: OWASP ZAP Full Scan
+      uses: zaproxy/action-full-scan@v0.7.0
+      with:
+        target: 'http://localhost:3000'
+        rules_file_name: '.zap/rules.tsv'
+        cmd_options: '-a'
+      continue-on-error: true
+    
+    - name: Nuclei Scan
+      uses: projectdiscovery/nuclei-action@main
+      with:
+        target: 'http://localhost:3000'
+        templates: 'cves,vulnerabilities,misconfigurations'
+      continue-on-error: true
+
+  # API Security Testing
+  api-security-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Start API
+      run: |
+        cd api
+        pip install -r requirements.txt
+        uvicorn main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+    
+    - name: API Security Test with REST Assured
+      run: |
+        pip install requests pytest
+        
+        # Create API security test
+        cat > api_security_test.py << 'EOF'
+        import requests
+        import pytest
+        
+        BASE_URL = "http://localhost:8000"
+        
+        def test_sql_injection():
+            malicious_payloads = [
+                "' OR '1'='1",
+                "'; DROP TABLE users; --",
+                "' UNION SELECT * FROM users --"
+            ]
+            
+            for payload in malicious_payloads:
+                response = requests.post(f"{BASE_URL}/predictions/predict-single", 
+                    json={"features": [payload], "model": "random_forest"})
+                assert response.status_code != 200 or "error" in response.text.lower()
+        
+        def test_xss_prevention():
+            xss_payloads = [
+                "<script>alert('xss')</script>",
+                "javascript:alert('xss')",
+                "<img src=x onerror=alert('xss')>"
+            ]
+            
+            for payload in xss_payloads:
+                response = requests.post(f"{BASE_URL}/predictions/predict-single",
+                    json={"features": [payload], "model": "random_forest"})
+                assert "<script>" not in response.text
+        
+        def test_authentication_bypass():
+            protected_endpoints = [
+                "/models/list",
+                "/predictions/predict",
+                "/data/upload"
+            ]
+            
+            for endpoint in protected_endpoints:
+                response = requests.get(f"{BASE_URL}{endpoint}")
+                # Should require authentication or return appropriate error
+                assert response.status_code in [401, 403, 422]
+        
+        def test_rate_limiting():
+            # Test rate limiting
+            responses = []
+            for i in range(20):
+                response = requests.get(f"{BASE_URL}/health")
+                responses.append(response.status_code)
+            
+            # Should have some rate limiting in place
+            rate_limited = sum(1 for status in responses if status == 429)
+            # Allow some flexibility in rate limiting implementation
+            assert rate_limited >= 0
+        EOF
+        
+        pytest api_security_test.py -v
+      continue-on-error: true

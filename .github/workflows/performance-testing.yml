@@ -1,0 +1,469 @@
+name: Performance Testing
+
+on:
+  push:
+    branches: [ main ]
+  schedule:
+    # Run performance tests daily at 4 AM UTC
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+    inputs:
+      duration:
+        description: 'Test duration in seconds'
+        required: false
+        default: '60'
+      users:
+        description: 'Number of virtual users'
+        required: false
+        default: '10'
+
+jobs:
+  # Load Testing
+  load-testing:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install k6
+      run: |
+        curl -s https://packagecloud.io/install/repositories/k6/k6-deb/script.deb.sh | sudo bash
+        sudo apt-get update
+        sudo apt-get install k6
+    
+    - name: Start Application Services
+      run: |
+        # Start API
+        cd api
+        pip install -r requirements.txt
+        uvicorn main:app --host 0.0.0.0 --port 8000 &
+        
+        # Start Backend
+        cd ../backend
+        npm ci
+        NODE_ENV=production npm start &
+        
+        # Start Frontend (for end-to-end testing)
+        cd ../frontend
+        npm ci
+        npm run build
+        npx serve -s dist -l 3000 &
+        
+        # Wait for services to start
+        sleep 30
+    
+    - name: Create Load Test Scripts
+      run: |
+        mkdir -p load-tests
+        
+        # API Load Test
+        cat > load-tests/api-load-test.js << 'EOF'
+        import http from 'k6/http';
+        import { check, sleep } from 'k6';
+        import { Rate } from 'k6/metrics';
+        
+        const errorRate = new Rate('errors');
+        
+        export let options = {
+          vus: ${{ github.event.inputs.users || '10' }},
+          duration: '${{ github.event.inputs.duration || '60' }}s',
+          thresholds: {
+            http_req_duration: ['p(95)<500'],
+            errors: ['rate<0.1'],
+          },
+        };
+        
+        export default function () {
+          // Health check
+          let healthResponse = http.get('http://localhost:8000/health');
+          check(healthResponse, {
+            'health status is 200': (r) => r.status === 200,
+          }) || errorRate.add(1);
+          
+          // Model list
+          let modelsResponse = http.get('http://localhost:8000/models/list');
+          check(modelsResponse, {
+            'models status is 200': (r) => r.status === 200,
+          }) || errorRate.add(1);
+          
+          // Prediction request
+          const predictionPayload = {
+            features: [1.0, 2.0, 3.0, 4.0, 5.0],
+            model: 'random_forest'
+          };
+          
+          let predResponse = http.post('http://localhost:8000/predictions/predict-single', 
+            JSON.stringify(predictionPayload), {
+            headers: { 'Content-Type': 'application/json' },
+          });
+          
+          check(predResponse, {
+            'prediction status is 200': (r) => r.status === 200,
+          }) || errorRate.add(1);
+          
+          sleep(1);
+        }
+        EOF
+        
+        # Backend Load Test
+        cat > load-tests/backend-load-test.js << 'EOF'
+        import http from 'k6/http';
+        import { check, sleep } from 'k6';
+        import { Rate } from 'k6/metrics';
+        
+        const errorRate = new Rate('errors');
+        
+        export let options = {
+          vus: ${{ github.event.inputs.users || '10' }},
+          duration: '${{ github.event.inputs.duration || '60' }}s',
+          thresholds: {
+            http_req_duration: ['p(95)<1000'],
+            errors: ['rate<0.1'],
+          },
+        };
+        
+        export default function () {
+          // Health check
+          let response = http.get('http://localhost:5000/api/health');
+          check(response, {
+            'backend health is 200': (r) => r.status === 200,
+          }) || errorRate.add(1);
+          
+          sleep(1);
+        }
+        EOF
+        
+        # Frontend Load Test
+        cat > load-tests/frontend-load-test.js << 'EOF'
+        import http from 'k6/http';
+        import { check, sleep } from 'k6';
+        import { Rate } from 'k6/metrics';
+        
+        const errorRate = new Rate('errors');
+        
+        export let options = {
+          vus: ${{ github.event.inputs.users || '10' }},
+          duration: '${{ github.event.inputs.duration || '60' }}s',
+          thresholds: {
+            http_req_duration: ['p(95)<2000'],
+            errors: ['rate<0.1'],
+          },
+        };
+        
+        export default function () {
+          let response = http.get('http://localhost:3000');
+          check(response, {
+            'frontend status is 200': (r) => r.status === 200,
+            'response time < 2s': (r) => r.timings.duration < 2000,
+          }) || errorRate.add(1);
+          
+          sleep(1);
+        }
+        EOF
+    
+    - name: Run API Load Tests
+      run: k6 run load-tests/api-load-test.js --out json=api-load-results.json
+      continue-on-error: true
+    
+    - name: Run Backend Load Tests
+      run: k6 run load-tests/backend-load-test.js --out json=backend-load-results.json
+      continue-on-error: true
+    
+    - name: Run Frontend Load Tests
+      run: k6 run load-tests/frontend-load-test.js --out json=frontend-load-results.json
+      continue-on-error: true
+    
+    - name: Upload Load Test Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: load-test-results
+        path: |
+          api-load-results.json
+          backend-load-results.json
+          frontend-load-results.json
+        retention-days: 30
+
+  # Stress Testing
+  stress-testing:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install Locust
+      run: pip install locust
+    
+    - name: Start API Service
+      run: |
+        cd api
+        pip install -r requirements.txt
+        uvicorn main:app --host 0.0.0.0 --port 8000 &
+        sleep 10
+    
+    - name: Create Stress Test Script
+      run: |
+        cat > stress_test.py << 'EOF'
+        from locust import HttpUser, task, between
+        import json
+        import random
+        
+        class ZeroDayUser(HttpUser):
+            wait_time = between(1, 3)
+            host = "http://localhost:8000"
+            
+            @task(3)
+            def health_check(self):
+                self.client.get("/health")
+            
+            @task(2)
+            def list_models(self):
+                self.client.get("/models/list")
+            
+            @task(1)
+            def predict_single(self):
+                payload = {
+                    "features": [random.uniform(0, 10) for _ in range(5)],
+                    "model": "random_forest"
+                }
+                self.client.post("/predictions/predict-single", 
+                                json=payload,
+                                headers={"Content-Type": "application/json"})
+            
+            @task(1)
+            def model_info(self):
+                models = ["random_forest", "isolation_forest", "svm"]
+                model = random.choice(models)
+                self.client.get(f"/models/info/{model}")
+        EOF
+    
+    - name: Run Stress Test
+      run: |
+        locust -f stress_test.py --headless \
+               --users 50 \
+               --spawn-rate 5 \
+               --run-time 120s \
+               --html stress-test-report.html \
+               --csv stress-test
+      continue-on-error: true
+    
+    - name: Upload Stress Test Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: stress-test-results
+        path: |
+          stress-test-report.html
+          stress-test_stats.csv
+          stress-test_failures.csv
+        retention-days: 30
+
+  # Memory and CPU Benchmarking
+  benchmark-testing:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Install Dependencies
+      run: |
+        cd api
+        pip install -r requirements.txt
+        pip install pytest-benchmark memory-profiler psutil
+    
+    - name: Create Benchmark Tests
+      run: |
+        cd api
+        cat > benchmark_tests.py << 'EOF'
+        import pytest
+        import numpy as np
+        import pandas as pd
+        from models.data_processor import DataProcessor
+        from models.ml_pipeline import MLPipeline
+        import time
+        import psutil
+        import os
+        
+        class TestBenchmarks:
+            
+            @pytest.mark.benchmark
+            def test_data_processing_benchmark(self, benchmark):
+                processor = DataProcessor()
+                data = pd.DataFrame(np.random.rand(10000, 20))
+                
+                result = benchmark(processor.normalize_features, data)
+                assert result is not None
+            
+            @pytest.mark.benchmark
+            def test_model_training_benchmark(self, benchmark):
+                pipeline = MLPipeline()
+                X = np.random.rand(1000, 10)
+                y = np.random.randint(0, 2, 1000)
+                
+                result = benchmark(pipeline.train_random_forest, X, y)
+                assert result is not None
+            
+            @pytest.mark.benchmark
+            def test_prediction_benchmark(self, benchmark):
+                from sklearn.ensemble import RandomForestClassifier
+                
+                # Pre-train a model
+                X_train = np.random.rand(1000, 10)
+                y_train = np.random.randint(0, 2, 1000)
+                model = RandomForestClassifier(n_estimators=10)
+                model.fit(X_train, y_train)
+                
+                X_test = np.random.rand(100, 10)
+                
+                result = benchmark(model.predict, X_test)
+                assert len(result) == 100
+            
+            def test_memory_usage(self):
+                process = psutil.Process()
+                initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+                
+                # Simulate heavy data processing
+                large_data = np.random.rand(50000, 50)
+                processor = DataProcessor()
+                processed_data = processor.normalize_features(pd.DataFrame(large_data))
+                
+                final_memory = process.memory_info().rss / 1024 / 1024  # MB
+                memory_increase = final_memory - initial_memory
+                
+                # Memory increase should be reasonable (less than 500MB)
+                assert memory_increase < 500
+                
+                del large_data, processed_data
+        EOF
+    
+    - name: Run Benchmark Tests
+      run: |
+        cd api
+        pytest benchmark_tests.py --benchmark-json=benchmark-results.json -v
+      continue-on-error: true
+    
+    - name: Upload Benchmark Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: benchmark-results
+        path: api/benchmark-results.json
+        retention-days: 30
+
+  # Database Performance Testing
+  database-performance:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpassword
+          MYSQL_DATABASE: testdb
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18.x'
+    
+    - name: Install Dependencies
+      run: |
+        cd backend
+        npm ci
+    
+    - name: Create Database Performance Test
+      run: |
+        cd backend
+        cat > db_performance_test.js << 'EOF'
+        const mysql = require('mysql2/promise');
+        
+        async function testDatabasePerformance() {
+          const connection = await mysql.createConnection({
+            host: 'localhost',
+            user: 'root',
+            password: 'testpassword',
+            database: 'testdb'
+          });
+          
+          // Create test table
+          await connection.execute(`
+            CREATE TABLE IF NOT EXISTS test_data (
+              id INT AUTO_INCREMENT PRIMARY KEY,
+              data TEXT,
+              timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+          `);
+          
+          console.log('Starting database performance test...');
+          
+          // Test insert performance
+          const startInsert = Date.now();
+          for (let i = 0; i < 1000; i++) {
+            await connection.execute(
+              'INSERT INTO test_data (data) VALUES (?)',
+              [`Test data ${i}`]
+            );
+          }
+          const insertTime = Date.now() - startInsert;
+          console.log(`Insert 1000 records: ${insertTime}ms`);
+          
+          // Test select performance
+          const startSelect = Date.now();
+          const [rows] = await connection.execute('SELECT * FROM test_data LIMIT 100');
+          const selectTime = Date.now() - startSelect;
+          console.log(`Select 100 records: ${selectTime}ms`);
+          
+          // Cleanup
+          await connection.execute('DROP TABLE test_data');
+          await connection.end();
+          
+          // Performance assertions
+          if (insertTime > 10000) {
+            console.error('Insert performance too slow');
+            process.exit(1);
+          }
+          
+          if (selectTime > 1000) {
+            console.error('Select performance too slow');
+            process.exit(1);
+          }
+          
+          console.log('Database performance test passed');
+        }
+        
+        testDatabasePerformance().catch(console.error);
+        EOF
+    
+    - name: Run Database Performance Test
+      run: |
+        cd backend
+        node db_performance_test.js
+      env:
+        DB_HOST: localhost
+        DB_PORT: 3306
+        DB_NAME: testdb
+        DB_USER: root
+        DB_PASSWORD: testpassword
