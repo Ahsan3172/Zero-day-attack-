@@ -105,6 +105,7 @@ class TestFileHandler:
         cleaned_count = file_handler.cleanup_old_files()
         assert cleaned_count >= 0  # Should clean up files
 
+@pytest.mark.security
 class TestSecurityUtils:
     """Test security-related utilities"""
     

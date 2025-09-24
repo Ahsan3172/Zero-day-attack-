@@ -191,6 +191,7 @@ class TestDataValidation:
         assert result["success"] is True
         assert "anomalies" in result["data"]
 
+@pytest.mark.security
 class TestSecurityEndpoints:
     """Test security-related functionality"""
     

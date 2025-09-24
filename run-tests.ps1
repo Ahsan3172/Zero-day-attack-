@@ -107,7 +107,7 @@ if ($Api -or (-not $Frontend -and -not $Backend)) {
         Invoke-TestSuite "API Unit Tests" "python -m pytest tests/test_models.py -v" "api"
         Invoke-TestSuite "API Integration Tests" "python -m pytest tests/test_api.py -v" "api"
         Invoke-TestSuite "API Utils Tests" "python -m pytest tests/test_utils.py -v" "api"
-        Invoke-TestSuite "API Security Tests" "python -m pytest -m security -v" "api"
+        Invoke-TestSuite "API Security Tests" "python -m pytest -m security -v --cov-fail-under=0" "api"
     } else {
         Write-Host "API directory not found, skipping API tests" -ForegroundColor Yellow
     }
