@@ -174,16 +174,19 @@ jobs:
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-frontend.sarif'
+        category: trivy-frontend
     
     - name: Upload Trivy scan results
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-backend.sarif'
+        category: trivy-backend
     
     - name: Upload Trivy scan results
       uses: github/codeql-action/upload-sarif@v3
       with:
         sarif_file: 'trivy-api.sarif'
+        category: trivy-api
 
   # Secrets Scanning
   secrets-scan:
@@ -285,60 +288,60 @@ jobs:
         pip install requests pytest
         
         # Create API security test
-        cat > api_security_test.py << 'EOF'
-        import requests
-        import pytest
-        
-        BASE_URL = "http://localhost:8000"
-        
-        def test_sql_injection():
-            malicious_payloads = [
-                "' OR '1'='1",
-                "'; DROP TABLE users; --",
-                "' UNION SELECT * FROM users --"
-            ]
-            
-            for payload in malicious_payloads:
-                response = requests.post(f"{BASE_URL}/predictions/predict-single", 
-                    json={"features": [payload], "model": "random_forest"})
-                assert response.status_code != 200 or "error" in response.text.lower()
-        
-        def test_xss_prevention():
-            xss_payloads = [
-                "<script>alert('xss')</script>",
-                "javascript:alert('xss')",
-                "<img src=x onerror=alert('xss')>"
-            ]
-            
-            for payload in xss_payloads:
-                response = requests.post(f"{BASE_URL}/predictions/predict-single",
-                    json={"features": [payload], "model": "random_forest"})
-                assert "<script>" not in response.text
-        
-        def test_authentication_bypass():
-            protected_endpoints = [
-                "/models/list",
-                "/predictions/predict",
-                "/data/upload"
-            ]
-            
-            for endpoint in protected_endpoints:
-                response = requests.get(f"{BASE_URL}{endpoint}")
-                # Should require authentication or return appropriate error
-                assert response.status_code in [401, 403, 422]
-        
-        def test_rate_limiting():
-            # Test rate limiting
-            responses = []
-            for i in range(20):
-                response = requests.get(f"{BASE_URL}/health")
-                responses.append(response.status_code)
-            
-            # Should have some rate limiting in place
-            rate_limited = sum(1 for status in responses if status == 429)
-            # Allow some flexibility in rate limiting implementation
-            assert rate_limited >= 0
-        EOF
+    cat > api_security_test.py << 'EOF'
+    import requests
+    import pytest
+
+    BASE_URL = "http://localhost:8000"
+
+    def test_sql_injection():
+      malicious_payloads = [
+        "' OR '1'='1",
+        "'; DROP TABLE users; --",
+        "' UNION SELECT * FROM users --"
+      ]
+
+      for payload in malicious_payloads:
+        response = requests.post(f"{BASE_URL}/predictions/predict-single", 
+          json={"features": [payload], "model": "random_forest"})
+        assert response.status_code != 200 or "error" in response.text.lower()
+
+    def test_xss_prevention():
+      xss_payloads = [
+        "<script>alert('xss')</script>",
+        "javascript:alert('xss')",
+        "<img src=x onerror=alert('xss')>"
+      ]
+
+      for payload in xss_payloads:
+        response = requests.post(f"{BASE_URL}/predictions/predict-single",
+          json={"features": [payload], "model": "random_forest"})
+        assert "<script>" not in response.text
+
+    def test_authentication_bypass():
+      protected_endpoints = [
+        "/api/v1/models",
+        "/api/v1/predict",
+        "/api/v1/data/upload"
+      ]
+
+      for endpoint in protected_endpoints:
+        response = requests.get(f"{BASE_URL}{endpoint}")
+        # Should require authentication or return appropriate error
+        assert response.status_code in [401, 403, 422]
+
+    def test_rate_limiting():
+      # Test rate limiting
+      responses = []
+      for i in range(20):
+        response = requests.get(f"{BASE_URL}/health")
+        responses.append(response.status_code)
+
+      # Should have some rate limiting in place
+      rate_limited = sum(1 for status in responses if status == 429)
+      # Allow some flexibility in rate limiting implementation
+      assert rate_limited >= 0
+    EOF
         
         pytest api_security_test.py -v
       continue-on-error: true
