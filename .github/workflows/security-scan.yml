@@ -328,7 +328,7 @@ jobs:
             for endpoint in protected_endpoints:
                 response = requests.get(f"{BASE_URL}{endpoint}")
                 # Should require authentication or return appropriate error
-                assert response.status_code in [401, 403, 422, 200]
+                assert response.status_code in [401, 403, 422, 404]
 
         def test_rate_limiting():
             # Test rate limiting
