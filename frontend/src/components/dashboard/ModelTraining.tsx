@@ -32,8 +32,13 @@ const ModelTraining = () => {
   const { user, isAuthenticated } = useAuth();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check if user has admin role
-  const isAdmin = user?.role === 'admin';
+  // Check if user has admin role (user is unknown in types so narrow safely)
+  const isAdmin = !!(
+    user &&
+    typeof user === 'object' &&
+    'role' in (user as Record<string, unknown>) &&
+    (user as { role?: unknown }).role === 'admin'
+  );
 
   const models = [
     { id: "random_forest", name: "Random Forest", status: "recommended", description: "Best for accuracy" },
@@ -171,6 +176,13 @@ const ModelTraining = () => {
     }
   };
 
+  const stopPolling = useCallback(() => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+  }, []);
+
   const startPolling = useCallback((taskId: string) => {
     // Clear any existing polling
     if (pollingIntervalRef.current) {
@@ -232,13 +244,6 @@ const ModelTraining = () => {
       }
     }, 3000);
   }, [getAuthHeaders, toast, stopPolling]);
-
-  const stopPolling = useCallback(() => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-  }, []);
 
   const cancelTraining = useCallback(async () => {
     if (!currentTaskId) return;
