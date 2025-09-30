@@ -32,13 +32,8 @@ const ModelTraining = () => {
   const { user, isAuthenticated } = useAuth();
   const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Check if user has admin role (user is unknown in types so narrow safely)
-  const isAdmin = !!(
-    user &&
-    typeof user === 'object' &&
-    'role' in (user as Record<string, unknown>) &&
-    (user as { role?: unknown }).role === 'admin'
-  );
+  // Check if user has admin role
+  const isAdmin = Boolean(user && user.role === 'admin');
 
   const models = [
     { id: "random_forest", name: "Random Forest", status: "recommended", description: "Best for accuracy" },
