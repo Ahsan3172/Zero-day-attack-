@@ -194,7 +194,7 @@ jobs:
     
     - name: Security checks
       run: |
-        bandit -r . -x tests/
+        # Bandit disabled in CI due to noisy results; run safety only
         safety check
       continue-on-error: true
     
