@@ -387,8 +387,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Frontend Dependency Audit
-      
+    
     
     - name: Backend Dependency Audit
       run: |
