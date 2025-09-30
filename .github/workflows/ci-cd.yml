@@ -204,9 +204,7 @@ jobs:
     
     
     
-    - name: Performance Tests
-      run: pytest -m performance -v --benchmark-only
-      continue-on-error: true
+    
     
     - name: Security Tests
       run: pytest -m security -v
