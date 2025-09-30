@@ -421,13 +421,15 @@ jobs:
   # Code Quality
   code-quality:
     runs-on: ubuntu-latest
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
     
     - name: SonarCloud Scan
-      if: ${{ secrets.SONAR_TOKEN != '' }}
+      if: ${{ env.SONAR_TOKEN != '' }}
       uses: SonarSource/sonarcloud-github-action@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
