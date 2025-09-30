@@ -49,7 +49,7 @@ const Reports = () => {
   });
 
   // Utility function to make authenticated API calls
-  const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
+  const fetchWithAuth = useCallback(async (url: string, options: RequestInit = {}) => {
     const token = localStorage.getItem('auth_token');
     
     if (!token) {
@@ -71,7 +71,7 @@ const Reports = () => {
     }
 
     return response.json();
-  };
+  }, []);
 
   // Fetch model results from API
   const fetchModelResults = useCallback(async (page: number = 1) => {
@@ -100,7 +100,7 @@ const Reports = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination.limit]);
+  }, [pagination.limit, fetchWithAuth, toast]);
 
   // Download a specific result
   const handleDownloadResult = async (resultId: number, format: 'pdf' | 'json' = 'json') => {

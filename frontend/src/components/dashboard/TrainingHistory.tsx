@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,7 @@ export function TrainingHistory() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const fetchTrainingJobs = async () => {
+  const fetchTrainingJobs = useCallback(async () => {
     try {
       const token = tokenManager.getToken();
       console.log('Token available:', !!token);
@@ -81,7 +81,7 @@ export function TrainingHistory() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   const deleteTrainingJob = async (jobId: number) => {
     if (!user?.role || !['admin', 'super_admin'].includes(user.role)) {
@@ -230,7 +230,7 @@ export function TrainingHistory() {
     } else {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, fetchTrainingJobs]);
 
   if (loading || !user) {
     return (

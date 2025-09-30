@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ModelResult } from '@/services/api';
 
@@ -34,7 +34,7 @@ const Debug: React.FC = () => {
   const [allResultsData, setAllResultsData] = useState<AllResultsData | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchDebugData = async () => {
+  const fetchDebugData = useCallback(async () => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
 
@@ -74,11 +74,11 @@ const Debug: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchDebugData();
-  }, [user]);
+  }, [fetchDebugData]);
 
   if (!user) {
     return <div>Please log in to view debug info</div>;

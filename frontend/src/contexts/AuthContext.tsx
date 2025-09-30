@@ -1,23 +1,9 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+/* eslint-disable react-refresh/only-export-components */
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { authApi, userApi, tokenManager, User, ApiResponse, LoginResponse } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
 
-interface AuthContextType {
-  user: User | null;
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (userData: RegisterData) => Promise<boolean>;
-  logout: () => Promise<void>;
-  refreshUser: () => Promise<void>;
-  updateUser: (userData: Partial<User>) => Promise<boolean>;
-}
-
-interface RegisterData {
-  username: string;
-  email: string;
-  password: string;
-}
+import type { AuthContextType, RegisterData } from '@/contexts/auth-types';
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
@@ -33,12 +19,29 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<React.PropsWithChildren<unknown>> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   const isAuthenticated = !!user && user.status === 'approved';
+
+  const refreshToken = useCallback(async (): Promise<void> => {
+    try {
+      const response = await authApi.refreshToken();
+      if (response.success && response.data) {
+        tokenManager.setToken(response.data.token);
+        setUser(response.data.user);
+      } else {
+        throw new Error('Token refresh failed');
+      }
+    } catch (error) {
+      console.error('Token refresh failed:', error);
+      tokenManager.removeToken();
+      setUser(null);
+      throw error;
+    }
+  }, []);
 
   // Initialize authentication state on app load
   useEffect(() => {
@@ -69,24 +72,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
 
     initializeAuth();
-  }, []);
-
-  const refreshToken = async (): Promise<void> => {
-    try {
-      const response = await authApi.refreshToken();
-      if (response.success && response.data) {
-        tokenManager.setToken(response.data.token);
-        setUser(response.data.user);
-      } else {
-        throw new Error('Token refresh failed');
-      }
-    } catch (error) {
-      console.error('Token refresh failed:', error);
-      tokenManager.removeToken();
-      setUser(null);
-      throw error;
-    }
-  };
+  }, [refreshToken]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -158,29 +144,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const logout = async (): Promise<void> => {
+  const logout = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
       await authApi.logout();
-      
+
       // Clear local state
       tokenManager.removeToken();
       setUser(null);
-      
+
       toast({
         title: "Logged Out",
         description: "You have been successfully logged out.",
       });
     } catch (error) {
       console.error('Logout failed:', error);
-      
+
       // Even if server logout fails, clear local state
       tokenManager.removeToken();
       setUser(null);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [toast]);
 
   const refreshUser = async (): Promise<void> => {
     try {
@@ -238,7 +224,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }, 23 * 60 * 1000); // Refresh every 23 minutes (tokens expire in 24 hours)
 
     return () => clearInterval(refreshInterval);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, refreshToken, logout]);
 
   const value: AuthContextType = {
     user,

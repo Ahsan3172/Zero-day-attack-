@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Brain, Play, Pause, RotateCcw, TrendingUp, CheckCircle, Shield, AlertCircle, Clock, Zap } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -54,14 +54,14 @@ const ModelTraining = () => {
     });
   };
 
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = tokenManager.getToken();
     console.log('🔑 Token from tokenManager:', token ? 'Present' : 'Missing');
     return {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     };
-  };
+  }, []);
 
   const startTraining = async () => {
     if (!isAdmin) {
@@ -171,7 +171,7 @@ const ModelTraining = () => {
     }
   };
 
-  const startPolling = (taskId: string) => {
+  const startPolling = useCallback((taskId: string) => {
     // Clear any existing polling
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
@@ -231,16 +231,16 @@ const ModelTraining = () => {
         // The user might want to see if the training recovers
       }
     }, 3000);
-  };
+  }, [getAuthHeaders, toast, stopPolling]);
 
-  const stopPolling = () => {
+  const stopPolling = useCallback(() => {
     if (pollingIntervalRef.current) {
       clearInterval(pollingIntervalRef.current);
       pollingIntervalRef.current = null;
     }
-  };
+  }, []);
 
-  const cancelTraining = async () => {
+  const cancelTraining = useCallback(async () => {
     if (!currentTaskId) return;
 
     try {
@@ -269,7 +269,7 @@ const ModelTraining = () => {
         variant: "destructive",
       });
     }
-  };
+  }, [currentTaskId, getAuthHeaders, toast, stopPolling]);
 
   const resetTraining = () => {
     if (isTraining) return;
@@ -288,7 +288,7 @@ const ModelTraining = () => {
     return () => {
       stopPolling();
     };
-  }, []);
+  }, [stopPolling]);
 
   const getModelBadgeVariant = (modelId: string) => {
     const model = models.find(m => m.id === modelId);

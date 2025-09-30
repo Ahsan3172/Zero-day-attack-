@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Brain, Clock, CheckCircle, AlertCircle, Trash2, Loader2, X, Calendar, Target, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { apiUrl } from "@/config/api";
 import { tokenManager } from "@/services/api";
 import type { ClassificationReport } from "@/types";
@@ -43,7 +43,7 @@ const Models = () => {
   const isAdmin = user?.role === 'admin';
 
   // Fetch models from API
-  const fetchModels = async () => {
+  const fetchModels = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -82,12 +82,12 @@ const Models = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
 
   // Fetch models on component mount
   useEffect(() => {
     fetchModels();
-  }, []);
+  }, [fetchModels]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
