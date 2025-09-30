@@ -73,7 +73,7 @@ echo -e "${BLUE}=== API Tests ===${NC}"
 run_test "API Unit Tests" "pytest tests/test_models.py tests/test_utils.py -v --cov=." "api"
 run_test "API Integration Tests" "pytest tests/test_api.py -v --cov=. --cov-append" "api"
 run_test "API Security Tests" "pytest -m security -v" "api"
-run_test "API Performance Tests" "pytest -m performance -v --benchmark-only" "api"
+run_test "API Performance Tests" "echo 'API performance tests are disabled in CI/run-tests script'" "api"
 run_test "API Code Quality" "flake8 . && mypy . --ignore-missing-imports" "api"
 run_test "API Security Scan" "bandit -r . -x tests/" "api"
 

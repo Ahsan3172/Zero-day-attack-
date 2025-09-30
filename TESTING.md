@@ -159,6 +159,7 @@ pytest -m security
 
 # Performance tests
 pytest -m performance --benchmark-only
+   (Note: performance tests are disabled in CI due to long-running/benchmarks causing failures. Run locally with caution.)
 
 # Code quality
 flake8 .
