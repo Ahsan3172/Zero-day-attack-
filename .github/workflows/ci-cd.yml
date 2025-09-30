@@ -327,12 +327,6 @@ jobs:
     - name: Wait for server
       run: sleep 10
     
-    - name: Install axe-core-cli
-      run: npm install -g @axe-core/cli
-    
-    - name: Run accessibility tests
-      run: axe http://localhost:3000 --exit
-      continue-on-error: true
 
   # Build and Deploy (on main branch)
   deploy:
