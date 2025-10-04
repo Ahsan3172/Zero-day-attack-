@@ -48,9 +48,10 @@ const Users = () => {
       const response = await adminApi.getAllUsers(pagination.page, pagination.limit);
       
       if (response.success && response.data) {
-        setUsers(response.data.items);
-        setPagination(response.data.pagination);
+        setUsers(Array.isArray(response.data.users) ? response.data.users : []);
+        setPagination(response.data.pagination ?? pagination);
       } else {
+        setUsers([]); // Defensive: always set to array
         throw new Error(response.message || 'Failed to fetch users');
       }
     } catch (error: unknown) {
@@ -85,9 +86,9 @@ const Users = () => {
     return <Navigate to="/dashboard" replace />;
   }
 
-  const filteredUsers = users.filter(user =>
-    user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUsers = (users ?? []).filter(user =>
+    user.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.email?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getRoleIcon = (role: string) => {

@@ -132,7 +132,7 @@ export interface AuditLog {
 
 // Generic API list response
 export interface ApiListResponse<T> {
-  items: T[];
+  users: T[];
   pagination: Pagination;
 }
 
