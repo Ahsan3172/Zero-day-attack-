@@ -244,7 +244,7 @@ jobs:
         cd ../frontend
         npm ci
         npm run build
-        npx serve -s dist -l 3000 &
+        node dev-static-server.js &
         
         # Wait for services to start
         sleep 30
@@ -256,6 +256,16 @@ jobs:
         rules_file_name: '.zap/rules.tsv'
         cmd_options: '-a'
       continue-on-error: true
+    
+    - name: Upload ZAP Reports
+      uses: actions/upload-artifact@v4
+      with:
+        name: zap-reports
+        path: |
+          report_json.json
+          report_md.md
+          report_html.html
+      if: always()
     
     - name: Nuclei Scan
       uses: projectdiscovery/nuclei-action@main
