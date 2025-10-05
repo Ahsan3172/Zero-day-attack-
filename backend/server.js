@@ -98,9 +98,13 @@ app.use('*', (req, res) => {
 // Start server
 async function startServer() {
   try {
-    // Connect to database
-    await connectDB();
-    logger.info('Database connected successfully');
+    // Skip database connection in CI environment
+    if (process.env.CI !== 'true') {
+      await connectDB();
+      logger.info('Database connected successfully');
+    } else {
+      logger.info('Skipping database connection in CI environment');
+    }
     
     app.listen(PORT, () => {
       logger.info(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);

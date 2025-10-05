@@ -66,6 +66,9 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`Static server running on http://0.0.0.0:${PORT} serving ${DIST_DIR}`);
+}).on('error', (err) => {
+  console.error('Server failed to start:', err);
+  process.exit(1);
 });
 
 // Graceful shutdown
