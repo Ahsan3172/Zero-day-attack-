@@ -1,10 +1,14 @@
 // Minimal static server for CI to block metadata paths
-const http = require('http');
-const fs = require('fs');
-const path = require('path');
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const DIST_DIR = path.join(__dirname, 'dist');
-const PORT = 3000;
+const PORT = 8080;
 
 const mime = {
   '.html': 'text/html',
@@ -70,6 +74,14 @@ server.listen(PORT, '0.0.0.0', () => {
   console.error('Server failed to start:', err);
   process.exit(1);
 });
+
+// Graceful shutdown
+process.on('SIGTERM', () => server.close());
+process.on('SIGINT', () => server.close());
+
+// Graceful shutdown
+process.on('SIGTERM', () => server.close());
+process.on('SIGINT', () => server.close());
 
 // Graceful shutdown
 process.on('SIGTERM', () => server.close());

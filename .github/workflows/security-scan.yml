@@ -242,19 +242,44 @@ jobs:
         export CI=true
         npm start &
         
-        # Skip frontend for now - focus on API scanning
+        # Start Frontend
+        cd ../frontend
+        npm ci
+        npm run build
+        node dev-static-server.js &
         
         # Wait for services to start
         sleep 30
     
-    - name: Check API Availability
+    - name: Check Service Availability
       run: |
+        echo "Checking API availability..."
         curl -f http://localhost:8000/health || (echo "API not available" && exit 1)
+        
+        echo "Checking Backend availability..."
+        curl -f http://localhost:5000/health || (echo "Backend not available" && exit 1)
+        
+        echo "Checking Frontend availability..."
+        curl -f http://localhost:8080 || (echo "Frontend not available" && exit 1)
     
-    - name: OWASP ZAP Full Scan
+    - name: OWASP ZAP API Scan
       uses: zaproxy/action-full-scan@v0.7.0
       with:
         target: 'http://host.docker.internal:8000'
+        cmd_options: '-a'
+      continue-on-error: true
+    
+    - name: OWASP ZAP Backend Scan
+      uses: zaproxy/action-full-scan@v0.7.0
+      with:
+        target: 'http://host.docker.internal:5000'
+        cmd_options: '-a'
+      continue-on-error: true
+    
+    - name: OWASP ZAP Frontend Scan
+      uses: zaproxy/action-full-scan@v0.7.0
+      with:
+        target: 'http://host.docker.internal:8080'
         cmd_options: '-a'
       continue-on-error: true
     
@@ -266,12 +291,29 @@ jobs:
           report_json.json
           report_md.md
           report_html.html
+          report_*.json
+          report_*.md
+          report_*.html
       if: always()
     
-    - name: Nuclei Scan
+    - name: Nuclei API Scan
       uses: projectdiscovery/nuclei-action@main
       with:
         target: 'http://host.docker.internal:8000'
+        templates: 'cves,vulnerabilities,misconfigurations'
+      continue-on-error: true
+    
+    - name: Nuclei Backend Scan
+      uses: projectdiscovery/nuclei-action@main
+      with:
+        target: 'http://host.docker.internal:5000'
+        templates: 'cves,vulnerabilities,misconfigurations'
+      continue-on-error: true
+    
+    - name: Nuclei Frontend Scan
+      uses: projectdiscovery/nuclei-action@main
+      with:
+        target: 'http://host.docker.internal:8080'
         templates: 'cves,vulnerabilities,misconfigurations'
       continue-on-error: true
 
