@@ -27,3 +27,4 @@ faker
 factory-boy
 pytest-benchmark
 pytest-xdist
+keras>=3.13.2 # not directly required, pinned by Snyk to avoid a vulnerability
